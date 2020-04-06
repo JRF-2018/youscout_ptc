@@ -1,0 +1,982 @@
+'== BEGIN MKJRFTRT ==
+CLEAR: VISIBLE 1,1,1,1,1,1: PNLTYPE "OFF": KEY 1,"LIST ": KEY 2,"ERL"+CHR$(13)
+MKJRFTRT_VER$ = "0.04" 'Time-stamp: <2013-02-27T09:08:36Z>
+MKJRFTRT_URI$ = "http://jrf.cocolog-nifty.com/archive/youscout/ptc/mkjrftrt.prg"
+
+GOSUB @STACKLIB_INIT
+GOSUB @STDLIB_INIT
+GOSUB @GPUTLIB_INIT
+GOSUB @TRTCONST_INIT
+GOSUB @JRFTAROT_INIT
+'REQUIRE "STACKLIB"
+'REQUIRE "STDLIB"
+'REQUIRE "GPUTLIB"
+'REQUIRE "TRTCONST"
+'REQUIRE "JRFTAROT"
+
+DEBUG = 1
+KEY 3, "FOR A=0 TO FSP:?FSTACK$[A]:NEXT" + CHR$(13)
+
+@MAIN
+  ARGNUM = 0: R$ = "@MAIN": GOSUB @ENTER
+
+  R = I: GOSUB @PUSH_R
+  R = J: GOSUB @PUSH_R
+  R = COL: GOSUB @PUSH_R
+  R$ = C$: GOSUB @PUSH_RS
+
+  PRINT "Initializing..."
+  PRINT "ショキカ チュウ..."
+
+  R = -1: GOSUB @PUSH_R
+  R$ = "GRP": GOSUB @PUSH_RS
+  R$ = "@" + TAROT_NAME$ + "_CMAP": GOSUB @PUSH_RS
+  GOSUB @READ_CMAP
+  CMAP$[COL_BOARD] = BOARD_RGB$
+  GPAGE 0
+  COLSET "GRP", COL_BOARD, BOARD_RGB$
+  GPAGE 1
+  COLSET "GRP", COL_BOARD, BOARD_RGB$
+  FOR I = 1 TO 16 - 1
+    GOSUB @GPAGE_U
+    GOSUB @BGPAGE_U
+    GOSUB @SPPAGE_U
+    COLSET "BG", I, CMAP$[I]
+    COLSET "SP", I, CMAP$[I]
+    GOSUB @GPAGE_L
+    GOSUB @BGPAGE_L
+    GOSUB @SPPAGE_L
+    COLSET "BG", I, CMAP$[I]
+'    COLSET "SP", I, CMAP$[I]
+  NEXT
+
+  GOSUB @BGPAGE_U
+@_LOAD_BM
+  FOR I = 0 TO 22 - 1
+    R$ = "@CHAR_" + STR$(I): GOSUB @PUSH_RS
+    R = COL_BLACK: GOSUB @PUSH_R
+    R = 0: GOSUB @PUSH_R
+    R = 0: GOSUB @PUSH_R
+    GOSUB @BM_TO_CHR
+    CHRSET "BGU1", BGU1_NUM_OFFSET + I, R$
+  NEXT
+  FOR I = 0 TO BG_ALP_DATA_LEN - 1
+    C$ = BG_ALP_DATA$[I]
+    R$ = "@CHAR_" + C$: GOSUB @PUSH_RS
+    R = COL_BLACK: GOSUB @PUSH_R
+    R = 0: GOSUB @PUSH_R
+    R = 0: GOSUB @PUSH_R
+    GOSUB @BM_TO_CHR
+    CHRSET "BGU1", BGU1_ALP_OFFSET + I, R$
+  NEXT
+  FOR I = 0 TO BG_SUIT_DATA_LEN - 1
+    C$ = BG_SUIT_DATA_N$[I]
+    COL = BG_SUIT_DATA_C[I]
+    R$ = "@CHAR_" + C$: GOSUB @PUSH_RS
+    R = COL: GOSUB @PUSH_R
+    R = -2: GOSUB @PUSH_R
+    R = 0: GOSUB @PUSH_R
+    GOSUB @BM_TO_CHR
+    CHRSET "BGU1", BGU1_SUIT_OFFSET + I, R$
+  NEXT
+
+  GOSUB @SPPAGE_U
+  GOSUB @BGPAGE_U
+  GOSUB @LOAD_SOROBAN
+  GOSUB @LOAD_WHCD
+  GOSUB @LOAD_MISC_PM
+  GOSUB @LOAD_RDLN
+  GOSUB @LOAD_CDS_SPU
+
+  FOR I = BGU1_MISC_END TO 256 - 1
+    CHRSET "BGU1", I, "0" * 8 * 8
+  NEXT
+  FOR I = SPU7_NONE TO SPU7_NONE + 4 - 1
+    CHRSET "SPU7", I, "0" * 8 * 8
+  NEXT
+  FOR I = SPU7_END TO 256 - 1
+    CHRSET "SPU7", I, "0" * 8 * 8
+  NEXT
+
+  PRINT "INIT OK"
+
+  GPAGE 0, 0, 0
+  GCLS
+  PRINT "Saving BG Characters."
+  A$ = CHR_FILE_B$
+  SAVE "BGU1:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving SP Characters. [1/4]"
+  A$ = CHR_FILE_S7$
+  SAVE "SPU7:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving SP Characters. [2/4]"
+  A$ = CHR_FILE_S6$
+  SAVE "SPU6:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving SP Characters. [3/4]"
+  A$ = CHR_FILE_S5$
+  SAVE "SPU5:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving SP Characters. [4/4]"
+  A$ = CHR_FILE_S4$
+  SAVE "SPU4:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving Title Background."
+  GPAGE 1, 2, 2
+  GOSUB @DRAW_LOGO_GRP
+  GPAGE 1, 0, 0
+  A$ = GRP_FILE_T$
+  SAVE "GRP2:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving Major Arcana."
+  GPAGE 1, 2, 2
+  GCLS
+  FOR I = 0 TO 22 - 2 - 1
+    J = I + 1
+    IF I >= 12 THEN J = J + 1
+    R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+    R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+    R$ = STR$(J): R$ = "0" * (2 - LEN(R$)) + R$
+    R$ = "@" + TAROT_NAME$ + "_A" + R$: GOSUB @PUSH_RS
+    R = 0: GOSUB @PUSH_R
+    R = 0: GOSUB @PUSH_R
+    GOSUB @G_PUT_PM
+  NEXT
+  GPAGE 1, 0, 0
+  A$ = GRP_FILE_A$
+  SAVE "GRP2:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving Reversal Major Arcana."
+  GPAGE 1, 2, 2
+  GCLS
+  FOR I = 0 TO 22 - 2 - 1
+    J = I + 1
+    IF I >= 12 THEN J = J + 1
+    R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+    R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+    R$ = STR$(J): R$ = "0" * (2 - LEN(R$)) + R$
+    R$ = "@" + TAROT_NAME$ + "_A" + R$: GOSUB @PUSH_RS
+    R = 0: GOSUB @PUSH_R
+    R = 180: GOSUB @PUSH_R
+    GOSUB @G_PUT_PM
+  NEXT
+  GPAGE 1, 0, 0
+  A$ = GRP_FILE_R$
+  SAVE "GRP2:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving Swords."
+  GPAGE 1, 2, 2
+  GCLS
+  FOR I = 0 TO 14 - 1
+    R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+    R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+    R$ = STR$(I + 1): R$ = "0" * (2 - LEN(R$)) + R$
+    R$ = "@" + TAROT_NAME$ + "_S" + R$: GOSUB @PUSH_RS
+    R = 0: GOSUB @PUSH_R
+    R = 0: GOSUB @PUSH_R
+    GOSUB @G_PUT_PM
+  NEXT
+  I = GRP_S_B00
+  R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+  R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+  R$ = PM_B00$: GOSUB @PUSH_RS
+  R = 0: GOSUB @PUSH_R
+  R = 0: GOSUB @PUSH_R
+  GOSUB @G_PUT_PM
+  I = GRP_S_DISCARDED
+  R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+  R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+  R$ = PM_DISCARDED$: GOSUB @PUSH_RS
+  R = 0: GOSUB @PUSH_R
+  R = 0: GOSUB @PUSH_R
+  GOSUB @G_PUT_PM
+  I = GRP_S_TALON
+  R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+  R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+  R$ = PM_TALON$: GOSUB @PUSH_RS
+  R = 0: GOSUB @PUSH_R
+  R = 0: GOSUB @PUSH_R
+  GOSUB @G_PUT_PM
+  GPAGE 1, 0, 0
+  A$ = GRP_FILE_S$
+  SAVE "GRP2:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving Coins."
+  GPAGE 1, 2, 2
+  GCLS
+  FOR I = 0 TO 14 - 1
+    R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+    R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+    R$ = STR$(I + 1): R$ = "0" * (2 - LEN(R$)) + R$
+    R$ = "@" + TAROT_NAME$ + "_D" + R$: GOSUB @PUSH_RS
+    R = 0: GOSUB @PUSH_R
+    R = 0: GOSUB @PUSH_R
+    GOSUB @G_PUT_PM
+  NEXT
+  I = GRP_D_A00
+  R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+  R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+  R$ = PM_A00$: GOSUB @PUSH_RS
+  R = 0: GOSUB @PUSH_R
+  R = 0: GOSUB @PUSH_R
+  GOSUB @G_PUT_PM
+  I = GRP_D_A13
+  R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+  R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+  R$ = PM_A13$: GOSUB @PUSH_RS
+  R = 0: GOSUB @PUSH_R
+  R = 0: GOSUB @PUSH_R
+  GOSUB @G_PUT_PM
+  GPAGE 1, 0, 0
+  A$ = GRP_FILE_D$
+  SAVE "GRP2:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving Cups."
+  GPAGE 1, 2, 2
+  GCLS
+  FOR I = 0 TO 14 - 1
+    R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+    R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+    R$ = STR$(I + 1): R$ = "0" * (2 - LEN(R$)) + R$
+    R$ = "@" + TAROT_NAME$ + "_H" + R$: GOSUB @PUSH_RS
+    R = 0: GOSUB @PUSH_R
+    R = 0: GOSUB @PUSH_R
+    GOSUB @G_PUT_PM
+  NEXT
+  GPAGE 1, 0, 0
+  A$ = GRP_FILE_H$
+  SAVE "GRP2:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving Wands."
+  GPAGE 1, 2, 2
+  GCLS
+  FOR I = 0 TO 14 - 1
+    R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+    R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+    R$ = STR$(I + 1): R$ = "0" * (2 - LEN(R$)) + R$
+    R$ = "@" + TAROT_NAME$ + "_C" + R$: GOSUB @PUSH_RS
+    R = 0: GOSUB @PUSH_R
+    R = 0: GOSUB @PUSH_R
+    GOSUB @G_PUT_PM
+  NEXT
+  GPAGE 1, 0, 0
+  A$ = GRP_FILE_C$
+  SAVE "GRP2:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+
+  PRINT "Saving Reversal Swords."
+  GPAGE 1, 2, 2
+  GCLS
+  FOR I = 0 TO 14 - 1
+    R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+    R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+    R$ = STR$(I + 1): R$ = "0" * (2 - LEN(R$)) + R$
+    R$ = "@" + TAROT_NAME$ + "_S" + R$: GOSUB @PUSH_RS
+    R = 0: GOSUB @PUSH_R
+    R = 180: GOSUB @PUSH_R
+    GOSUB @G_PUT_PM
+  NEXT
+  I = GRP_S_B00
+  R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+  R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+  R$ = PM_B00$: GOSUB @PUSH_RS
+  R = 0: GOSUB @PUSH_R
+  R = 180: GOSUB @PUSH_R
+  GOSUB @G_PUT_PM
+  I = GRP_S_DISCARDED
+  R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+  R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+  R$ = PM_DISCARDED$: GOSUB @PUSH_RS
+  R = 0: GOSUB @PUSH_R
+  R = 0: GOSUB @PUSH_R
+  GOSUB @G_PUT_PM
+  I = GRP_S_TALON
+  R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+  R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+  R$ = PM_TALON$: GOSUB @PUSH_RS
+  R = 0: GOSUB @PUSH_R
+  R = 0: GOSUB @PUSH_R
+  GOSUB @G_PUT_PM
+  GPAGE 1, 0, 0
+  A$ = GRP_FILE_RS$
+  SAVE "GRP2:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving Reversal Coins."
+  GPAGE 1, 2, 2
+  GCLS
+  FOR I = 0 TO 14 - 1
+    R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+    R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+    R$ = STR$(I + 1): R$ = "0" * (2 - LEN(R$)) + R$
+    R$ = "@" + TAROT_NAME$ + "_D" + R$: GOSUB @PUSH_RS
+    R = 0: GOSUB @PUSH_R
+    R = 180: GOSUB @PUSH_R
+    GOSUB @G_PUT_PM
+  NEXT
+  I = GRP_D_A00
+  R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+  R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+  R$ = PM_A00$: GOSUB @PUSH_RS
+  R = 0: GOSUB @PUSH_R
+  R = 180: GOSUB @PUSH_R
+  GOSUB @G_PUT_PM
+  I = GRP_D_A13
+  R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+  R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+  R$ = PM_A13$: GOSUB @PUSH_RS
+  R = 0: GOSUB @PUSH_R
+  R = 180: GOSUB @PUSH_R
+  GOSUB @G_PUT_PM
+  GPAGE 1, 0, 0
+  A$ = GRP_FILE_RD$
+  SAVE "GRP2:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving Reversal Cups."
+  GPAGE 1, 2, 2
+  GCLS
+  FOR I = 0 TO 14 - 1
+    R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+    R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+    R$ = STR$(I + 1): R$ = "0" * (2 - LEN(R$)) + R$
+    R$ = "@" + TAROT_NAME$ + "_H" + R$: GOSUB @PUSH_RS
+    R = 0: GOSUB @PUSH_R
+    R = 180: GOSUB @PUSH_R
+    GOSUB @G_PUT_PM
+  NEXT
+  GPAGE 1, 0, 0
+  A$ = GRP_FILE_RH$
+  SAVE "GRP2:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  PRINT "Saving Reversal Wands."
+  GPAGE 1, 2, 2
+  GCLS
+  FOR I = 0 TO 14 - 1
+    R = FLOOR(I / GRP_ROWS) * CARD_WIDTH: GOSUB @PUSH_R
+    R = (I % GRP_ROWS) * CARD_HEIGHT: GOSUB @PUSH_R
+    R$ = STR$(I + 1): R$ = "0" * (2 - LEN(R$)) + R$
+    R$ = "@" + TAROT_NAME$ + "_C" + R$: GOSUB @PUSH_RS
+    R = 0: GOSUB @PUSH_R
+    R = 180: GOSUB @PUSH_R
+    GOSUB @G_PUT_PM
+  NEXT
+  GPAGE 1, 0, 0
+  A$ = GRP_FILE_RC$
+  SAVE "GRP2:" + A$
+  IF RESULT != TRUE THEN @SAVE_ERROR
+
+  GOSUB @GPAGE_U
+  GCLS
+
+  GOSUB @POP_RS: C$ = R$
+  GOSUB @POP_R: COL = R
+  GOSUB @POP_R: J = R
+  GOSUB @POP_R: I = R
+
+  ARGNUM = 0: GOSUB @LEAVE
+  END
+
+
+@SAVE_ERROR
+  PRINT A$ + ": Save Error!"
+  STOP: RETURN
+
+
+@LOAD_SOROBAN '(NONE): NONE
+  ARGNUM = 0: R$ = "@LOAD_SOROBAN": GOSUB @ENTER
+
+  A = A 'Dummy substitution.
+
+  R$ = PM_SRBN_TAMA$: GOSUB @PUSH_RS
+  R = 2: GOSUB @PUSH_R
+  R = 1: GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  CHRSET "BGU1", BGU1_SRBN_TAMAL, RR$[0]
+  CHRSET "BGU1", BGU1_SRBN_TAMAR, RR$[1]
+  R$ = PM_SRBN_JIKU$: GOSUB @PUSH_RS
+  R = 2: GOSUB @PUSH_R
+  R = 1: GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  CHRSET "BGU1", BGU1_SRBN_JIKUL, RR$[0]
+  CHRSET "BGU1", BGU1_SRBN_JIKUR, RR$[1]
+  R$ = PM_SRBN_HARI$: GOSUB @PUSH_RS
+  R = 1: GOSUB @PUSH_R
+  R = 1: GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  CHRSET "BGU1", BGU1_SRBN_HARI, RR$[0]
+  R$ = PM_SRBN_TEN$: GOSUB @PUSH_RS
+  R = 1: GOSUB @PUSH_R
+  R = 1: GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  CHRSET "BGU1", BGU1_SRBN_TEN, RR$[0]
+
+  R$ = PM_SRBN_KADO$: GOSUB @PUSH_RS
+  R = 1: GOSUB @PUSH_R
+  R = 1: GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  CHRSET "BGU1", BGU1_SRBN_TL, RR$[0]
+  R$ = RR$[0]: GOSUB @PUSH_RS
+  GOSUB @ROTATE_CHR
+  CHRSET "BGU1", BGU1_SRBN_TR, R$
+  R$ = R$: GOSUB @PUSH_RS
+  GOSUB @ROTATE_CHR
+  CHRSET "BGU1", BGU1_SRBN_BR, R$
+  R$ = R$: GOSUB @PUSH_RS
+  GOSUB @ROTATE_CHR
+  CHRSET "BGU1", BGU1_SRBN_BL, R$
+
+  R$ = PM_SRBN_WAKU$: GOSUB @PUSH_RS
+  R = 1: GOSUB @PUSH_R
+  R = 1: GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  CHRSET "BGU1", BGU1_SRBN_L, RR$[0]
+  R$ = RR$[0]: GOSUB @PUSH_RS
+  GOSUB @ROTATE_CHR
+  CHRSET "BGU1", BGU1_SRBN_T, R$
+  R$ = R$: GOSUB @PUSH_RS
+  GOSUB @ROTATE_CHR
+  CHRSET "BGU1", BGU1_SRBN_R, R$
+  R$ = R$: GOSUB @PUSH_RS
+  GOSUB @ROTATE_CHR
+  CHRSET "BGU1", BGU1_SRBN_B, R$
+
+  ARGNUM = 0: GOSUB @LEAVE
+  RETURN
+
+
+@MAKE_FRAME_CHR_R '(FRAME_COL:NUMBER, CARD_COL:NUMBER): ARRAY
+  ARGNUM = 2: R$ = "@MAKE_FRAME_CHR_R": GOSUB @ENTER
+
+  R = FRAME_COL: GOSUB @PUSH_R
+  R = CARD_COL: GOSUB @PUSH_R
+  R = I: GOSUB @PUSH_R
+  R = J: GOSUB @PUSH_R
+  R = K: GOSUB @PUSH_R
+  R = W: GOSUB @PUSH_R
+  R = H: GOSUB @PUSH_R
+  R$ = COL$: GOSUB @PUSH_RS
+  R$ = WH$: GOSUB @PUSH_RS
+
+  FRAME_COL = VAL(STACK$[BP + 1])
+  CARD_COL = VAL(STACK$[BP + 2])
+
+  COL$ = HEX$(FRAME_COL, 1)
+  WH$ = HEX$(CARD_COL, 1)
+  W = CARD_WIDTH
+  H = CARD_HEIGHT
+
+  TMP$[0, 0] = "0" + COL$ * (W - 2) + "0"
+  TMP$[1, 0] = COL$ * 2 + WH$ * (W - 4) + COL$ * 2
+  FOR I = 2 TO H - 3
+    TMP$[I, 0] = COL$ + WH$ * (W - 2) + COL$
+  NEXT
+  TMP$[H - 2, 0] = COL$ * 2 + WH$ * (W - 4) + COL$ * 2
+  TMP$[H - 1, 0] = "0" + COL$ * (W - 2) + "0"
+
+  FOR I = 0 TO (8 * 8) - 1
+    RR$[I] = ""
+  NEXT
+
+  FOR J = 0 TO 8 - 1
+    FOR I = 0 TO 8 - 1
+      A$ = ""
+      FOR K = 0 TO 8 - 1
+        IF (J * 8 + K >= H) OR (I * 8 >= W) THEN A$ = A$ + "0" * 8: GOTO @_MK_FRM_CHR_R_1
+	A = 8
+	IF I * 8 + 8 > W THEN A = I * 8 + 8 - W
+	A$ = A$ + MID$(TMP$[J * 8 + K, 0], I * 8, A) + "0" * (8 - A)
+@_MK_FRM_CHR_R_1
+      NEXT
+      RR$[J * 8 + I] = A$
+    NEXT
+  NEXT
+  RN = 8 * 8
+
+  GOSUB @POP_RS: WH$ = R$
+  GOSUB @POP_RS: COL$ = R$
+  GOSUB @POP_R: H = R
+  GOSUB @POP_R: W = R
+  GOSUB @POP_R: K = R
+  GOSUB @POP_R: J = R
+  GOSUB @POP_R: I = R
+  GOSUB @POP_R: CARD_COL = R
+  GOSUB @POP_R: FRAME_COL = R
+
+  ARGNUM = 2: GOSUB @LEAVE
+  RT$ = "ARRAY"
+  RETURN
+
+
+@LOAD_WHCD '(NONE): NONE
+  ARGNUM = 0: R$ = "@LOAD_WHCD": GOSUB @ENTER
+
+  R = BW: GOSUB @PUSH_R
+  R = BH: GOSUB @PUSH_R
+
+  BW = FLOOR(CARD_WIDTH / 8) + !!(CARD_WIDTH % 8)
+  BH = FLOOR(CARD_HEIGHT / 8) + !!(CARD_HEIGHT % 8)
+
+  CHRSET "BGU1", BGU1_WHCD_C, HEX$(COL_WHITE, 1) * 8 * 8
+  CHRSET "BGU1", BGU1_WHCD_TLP, HEX$(COL_GREY, 1) + "0" * (8 * 8 - 1)
+
+  A = CARD_WIDTH % 8
+  IF A == 0 THEN A = 8
+  CHRSET "BGU1", BGU1_WHCD_TRP, "0" * (A - 1) + HEX$(COL_GREY, 1) + "0" * (8 - A) + "0" * 8 * 7
+
+  A = CARD_HEIGHT % 8
+  IF A == 0 THEN A = 8
+  A$ = "0" * 8 * (A - 1) + HEX$(COL_GREY, 1) + "0" * (8 * (8 - A) + 7)
+  CHRSET "BGU1", BGU1_WHCD_BLP, A$
+
+  R = COL_GREY: GOSUB @PUSH_R
+  R = COL_WHITE: GOSUB @PUSH_R
+  GOSUB @MAKE_FRAME_CHR_R
+  CHRSET "BGU1", BGU1_WHCD_TL, RR$[0]
+  CHRSET "BGU1", BGU1_WHCD_T, RR$[1]
+  CHRSET "BGU1", BGU1_WHCD_TR, RR$[BW - 1]
+  CHRSET "BGU1", BGU1_WHCD_L, RR$[8]
+  CHRSET "BGU1", BGU1_WHCD_R, RR$[8 + BW - 1]
+  CHRSET "BGU1", BGU1_WHCD_BL, RR$[8 * (BH - 1)]
+  CHRSET "BGU1", BGU1_WHCD_B, RR$[8 * (BH - 1) + 1]
+  CHRSET "BGU1", BGU1_WHCD_BR, RR$[8 * (BH - 1) + BW - 1]
+  
+  A$ = RR$[0]
+  A$ = HEX$(COL_GREY, 1) + MID$(A$, 1, 8 * 8 - 1)
+  CHRSET "BGU1", BGU1_WHCD_TLWP, A$
+
+  A = CARD_WIDTH % 8
+  IF A == 0 THEN A = 8
+  A$ = RR$[BW - 1]
+  A$ = MID$(A$, 0, A - 1)  + HEX$(COL_GREY, 1) + MID$(A$, A, 8 * 7 + (8 - A))
+  CHRSET "BGU1", BGU1_WHCD_TRWP, A$
+
+  A = CARD_HEIGHT % 8
+  IF A == 0 THEN A = 8
+  A$ = RR$[8 * (BH - 1)]
+  A$ = MID$(A$, 0, 8 * (A - 1))  + HEX$(COL_GREY, 1) + MID$(A$, 8 * (A - 1) + 1, 8 * (8 - A) + 7)
+  CHRSET "BGU1", BGU1_WHCD_BLWP, A$
+
+  GOSUB @POP_R: BH = R
+  GOSUB @POP_R: BW = R
+
+  ARGNUM = 0: GOSUB @LEAVE
+  RETURN
+
+
+@DRAW_LOGO_GRP '(NONE): NONE
+  ARGNUM = 0: R$ = "@DRAW_LOGO_GRP": GOSUB @ENTER
+
+  R = I: GOSUB @PUSH_R
+  R = W: GOSUB @PUSH_R
+  R = H: GOSUB @PUSH_R
+
+  GCLS COL_BOARD
+
+  RESTORE CHAR_LOGO$[0]
+  READ W, H
+  W = W 'Dummy code.
+
+  FOR I = 0 TO CHAR_LOGO_LEN - 1
+    R = 32: GOSUB @PUSH_R
+    R = 16 + I * (H + 32): GOSUB @PUSH_R
+    R = COL_WHITE: GOSUB @PUSH_R
+    R$ = CHAR_LOGO$[I]: GOSUB @PUSH_RS
+    R = 0: GOSUB @PUSH_R
+    R = 0: GOSUB @PUSH_R
+    GOSUB @G_PUT_BM
+  NEXT
+
+  GOSUB @POP_R: H = R
+  GOSUB @POP_R: W = R
+  GOSUB @POP_R: I = R
+
+  ARGNUM = 0: GOSUB @LEAVE
+  RETURN
+
+
+@LOAD_MISC_PM '(NONE): NONE
+  ARGNUM = 0: R$ = "@LOAD_MISC_PM": GOSUB @ENTER
+
+  R = I: GOSUB @PUSH_R
+  R = W: GOSUB @PUSH_R
+  R = H: GOSUB @PUSH_R
+
+  R$ = "01111110" + "01FFFF10" * 5 + "01111110" + "0" * 8
+  CHRSET "BGU1", BGU1_MINI_CD, R$
+
+  R$ = PM_TOKEN$: GOSUB @PUSH_RS
+  R = 4: GOSUB @PUSH_R
+  R = 4: GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  FOR I = 0 TO RN - 1
+    CHRSET "SPU7", SPU7_TOKEN + I, RR$[I]
+    CHRSET "BGU1", BGU1_TOKEN + I, RR$[I]
+  NEXT
+
+  RESTORE PM_B00$ + "_SZ"
+  READ W, H
+  R$ = PM_B00$: GOSUB @PUSH_RS
+  R = FLOOR(W / 8) + !!(W % 8): GOSUB @PUSH_R
+  R = FLOOR(H / 8) + !!(H % 8): GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  FOR I = 0 TO RN - 1
+    CHRSET "BGU1", BGU1_B00 + I, RR$[I]
+  NEXT
+
+  RESTORE PM_DISCARDED$ + "_SZ"
+  READ W, H
+  R$ = PM_DISCARDED$: GOSUB @PUSH_RS
+  R = FLOOR(W / 8) + !!(W % 8): GOSUB @PUSH_R
+  R = FLOOR(H / 8) + !!(H % 8): GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  FOR I = 0 TO RN - 1
+    CHRSET "BGU1", BGU1_DISCARDED + I, RR$[I]
+  NEXT
+
+  RESTORE PM_A00$ + "_SZ"
+  READ W, H
+  R$ = PM_A00$: GOSUB @PUSH_RS
+  R = FLOOR(W / 8) + !!(W % 8): GOSUB @PUSH_R
+  R = FLOOR(H / 8) + !!(H % 8): GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  FOR I = 0 TO RN - 1
+    CHRSET "BGU1", BGU1_A00 + I, RR$[I]
+  NEXT
+
+  RESTORE PM_A13$ + "_SZ"
+  READ W, H
+  R$ = PM_A13$: GOSUB @PUSH_RS
+  R = FLOOR(W / 8) + !!(W % 8): GOSUB @PUSH_R
+  R = FLOOR(H / 8) + !!(H % 8): GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  FOR I = 0 TO RN - 1
+    CHRSET "BGU1", BGU1_A13 + I, RR$[I]
+  NEXT
+
+  R$ = PM_B00$: GOSUB @PUSH_RS
+  R = 8: GOSUB @PUSH_R
+  R = 8: GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  FOR I = 0 TO RN - 1
+    CHRSET "SPU7", SPU7_B00 + I, RR$[I]
+  NEXT
+
+  R$ = PM_A00$: GOSUB @PUSH_RS
+  R = 8: GOSUB @PUSH_R
+  R = 8: GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  FOR I = 0 TO RN - 1
+    CHRSET "SPU7", SPU7_A00 + I, RR$[I]
+  NEXT
+
+  R$ = PM_A13$: GOSUB @PUSH_RS
+  R = 8: GOSUB @PUSH_R
+  R = 8: GOSUB @PUSH_R
+  GOSUB @PM_TO_CHR_R
+  FOR I = 0 TO RN - 1
+    CHRSET "SPU7", SPU7_A13 + I, RR$[I]
+  NEXT
+
+  GOSUB @POP_R: H = R
+  GOSUB @POP_R: W = R
+  GOSUB @POP_R: I = R
+
+  ARGNUM = 0: GOSUB @LEAVE
+  RETURN
+
+
+@LOAD_RDLN '(NONE): NONE
+  ARGNUM = 0: R$ = "@LOAD_RDLN": GOSUB @ENTER
+
+  R = I: GOSUB @PUSH_R
+
+  A$ = HEX$(COL_RED, 1)
+  CHRSET "BGU1", BGU1_RDLN_TL, "0" + A$ * 7 + A$ * 2 + "0" * 6 + (A$ + "0" * 7) * 6
+  CHRSET "BGU1", BGU1_RDLN_T, A$ * 8 + ("0" * 8) * 7
+  CHRSET "BGU1", BGU1_RDLN_L, (A$ + "0" * 7) * 8
+
+  CHRREAD("BGU1", BGU1_RDLN_TL), A$
+  CHRSET "SPU7", SPU7_RDLN_TL + 0, A$
+  CHRREAD("BGU1", BGU1_RDLN_T), A$
+  CHRSET "SPU7", SPU7_RDLN_TL + 1, A$
+  CHRSET "SPU7", SPU7_RDLN_TL + 2, A$
+  CHRSET "SPU7", SPU7_RDLN_TL + 3, A$
+  CHRREAD("BGU1", BGU1_RDLN_L), A$
+  FOR I = 0 TO 3 - 1
+    CHRSET "SPU7", SPU7_RDLN_TL + 4 + I * 4 + 0, A$
+    CHRSET "SPU7", SPU7_RDLN_TL + 4 + I * 4 + 1, "0" * 8 * 8
+    CHRSET "SPU7", SPU7_RDLN_TL + 4 + I * 4 + 2, "0" * 8 * 8
+    CHRSET "SPU7", SPU7_RDLN_TL + 4 + I * 4 + 3, "0" * 8 * 8
+  NEXT
+  CHRREAD("BGU1", BGU1_RDLN_T), A$
+  CHRSET "SPU7", SPU7_RDLN_T + 0, A$
+  CHRSET "SPU7", SPU7_RDLN_T + 1, A$
+  CHRSET "SPU7", SPU7_RDLN_T + 2, A$
+  CHRSET "SPU7", SPU7_RDLN_T + 3, A$
+  
+  GOSUB @POP_R: I = R
+
+  ARGNUM = 0: GOSUB @LEAVE
+  RETURN
+
+
+@CARD_TO_SUIT_NUM '(NAME$:STRING): NUMBER
+  R$ = "@CARD_TO_SUIT_NUM": ARGNUM = 1: GOSUB @ENTER
+
+  R$ = NAME$: GOSUB @PUSH_RS
+
+  NAME$ = STACK$[BP + 1]
+
+  A$ = MID$(NAME$, 0, 1)
+  A = VAL(MID$(NAME$, 1, 2))
+
+  IF A$ == "A" THEN A = A % 2: GOTO @_CARD_TO_SNUM_1
+  IF A$ == "S" THEN A = 2: GOTO @_CARD_TO_SNUM_1
+  IF A$ == "D" THEN A = 3: GOTO @_CARD_TO_SNUM_1
+  IF A$ == "H" THEN A = 4: GOTO @_CARD_TO_SNUM_1
+  IF A$ == "C" THEN A = 5: GOTO @_CARD_TO_SNUM_1
+  IF A$ == "B" THEN A = 6: GOTO @_CARD_TO_SNUM_1
+  A = -1
+
+@_CARD_TO_SNUM_1
+
+  GOSUB @POP_RS: NAME$ = R$
+
+  ARGNUM = 1: GOSUB @LEAVE
+  RT$ = "NUMBER"
+  R = A
+  RETURN
+
+
+@CARD_TO_BG_NUM '(NAME$:STRING): NUMBER
+  R$ = "@CARD_TO_BG_NUM": ARGNUM = 1: GOSUB @ENTER
+
+  R$ = NAME$: GOSUB @PUSH_RS
+
+  NAME$ = STACK$[BP + 1]
+
+  A$ = MID$(NAME$, 0, 1)
+  A = VAL(MID$(NAME$, 1, 2))
+
+  IF A$ == "A" THEN A = BGU1_NUM_OFFSET + A: GOTO @_CARD_TO_BNUM_E
+  IF A == 1 THEN A = BGU1_ALP_OFFSET + 0: GOTO @_CARD_TO_BNUM_E
+  IF A >= 11 THEN A = BGU1_ALP_OFFSET + A - 10: GOTO @_CARD_TO_BNUM_E
+  A = BGU1_NUM_OFFSET + A
+
+@_CARD_TO_BNUM_E
+
+  GOSUB @POP_RS: NAME$ = R$
+
+  ARGNUM = 1: GOSUB @LEAVE
+  RT$ = "NUMBER"
+  R = A
+  RETURN
+
+
+@MAKE_CD_TL_R '(CARD$:STRING): ARRAY
+  R$ = "@MAKE_CD_TL_R": ARGNUM = 1: GOSUB @ENTER
+
+  R$ = CARD$: GOSUB @PUSH_RS
+  R = I: GOSUB @PUSH_R
+  R = J: GOSUB @PUSH_R
+  R$ = C$: GOSUB @PUSH_RS
+
+  CARD$ = STACK$[BP + 1]
+
+  CHRREAD("BGU1", BGU1_WHCD_TL), A$
+  CHRREAD("BGU1", BGU1_WHCD_T), R$
+  FOR I = 0 TO 8 - 1
+    TMP$[I, 0] = MID$(A$, I * 8, 8) + MID$(R$, I * 8, 8)
+  NEXT
+
+  R$ = CARD$: GOSUB @PUSH_RS
+  GOSUB @CARD_TO_BG_NUM
+  CHRREAD("BGU1", R), C$
+  FOR J = 0 TO 7 - 1
+    FOR I = 0 TO 8 - 1
+      A$ = MID$(C$, J * 8 + I, 1)
+      IF A$ == "0" THEN @_MK_CD_TL_1
+      TMP$[J + 1, 0] = SUBST$(TMP$[J + 1, 0], I + 1, 1, A$)
+@_MK_CD_TL_1
+    NEXT
+  NEXT
+
+  R$ = CARD$: GOSUB @PUSH_RS
+  GOSUB @CARD_TO_SUIT_NUM
+  CHRREAD("BGU1", R + BGU1_SUIT_OFFSET), C$
+  FOR J = 0 TO 7 - 1
+    FOR I = 0 TO 8 - 1
+      A$ = MID$(C$, J * 8 + I, 1)
+      IF A$ == "0" THEN @_MK_CD_TL_2
+      TMP$[J + 1, 0] = SUBST$(TMP$[J + 1, 0], I + 1 + 8, 1, A$)
+@_MK_CD_TL_2
+    NEXT
+  NEXT
+
+  RR$[0] = ""
+  RR$[1] = ""
+
+  FOR I = 0 TO 8 - 1
+    RR$[0] = RR$[0] + MID$(TMP$[I, 0], 0, 8)
+    RR$[1] = RR$[1] + MID$(TMP$[I, 0], 8, 8)
+  NEXT
+  RN = 2
+
+  GOSUB @POP_RS: C$ = R$
+  GOSUB @POP_R: J = R
+  GOSUB @POP_R: I = R
+  GOSUB @POP_RS: CARD$ = R$
+  
+  ARGNUM = 1: GOSUB @LEAVE
+  RETURN
+
+
+@LOAD_CDS_SPU '(NONE): NONE
+  R$ = "@LOAD_CDS_SPU": ARGNUM = 0: GOSUB @ENTER
+
+  R = I: GOSUB @PUSH_R
+  R = J: GOSUB @PUSH_R
+  R$ = C$: GOSUB @PUSH_RS
+  R$ = D$: GOSUB @PUSH_RS
+
+  FOR I = 0 TO 256 - 1
+    CHRSET "SPU4", I, "0" * 8 * 8
+    CHRSET "SPU5", I, "0" * 8 * 8
+    CHRSET "SPU6", I, "0" * 8 * 8
+  NEXT
+
+  FOR I = 0 TO 4 - 1
+    C$ = MID$("SDHC", I, 1)
+    FOR J = 0 TO 14 - 1
+      R$ = C$ + STR$(J + 1): GOSUB @PUSH_RS
+      GOSUB @MAKE_CD_TL_R
+      CHRSET "SPU6", SPU6_CDTL_S_OFS + 4 * (I * 14 + J), RR$[0]
+      CHRSET "SPU6", SPU6_CDTL_S_OFS + 4 * (I * 14 + J) + 1, RR$[1]
+    NEXT
+  NEXT
+
+  CHRREAD("BGU1", BGU1_WHCD_TL), C$
+  CHRREAD("BGU1", BGU1_WHCD_TLWP), D$
+  CHRSET "SPU5", SPU5_WHCD + 0, C$
+  CHRSET "SPU5", SPU5_WHCD_PTL + 0, D$
+  CHRSET "SPU5", SPU5_WHCD_PT + 0, D$
+  CHRSET "SPU5", SPU5_WHCD_PL + 0, D$
+
+  CHRREAD("BGU1", BGU1_WHCD_TR), C$
+  CHRREAD("BGU1", BGU1_WHCD_TRWP), D$
+  CHRSET "SPU5", SPU5_WHCD + 4, C$
+  CHRSET "SPU5", SPU5_WHCD_PTL + 4, D$
+  CHRSET "SPU5", SPU5_WHCD_PT + 4, D$
+  CHRSET "SPU5", SPU5_WHCD_PL + 4, C$
+
+  CHRREAD("BGU1", BGU1_WHCD_BL), C$
+  CHRREAD("BGU1", BGU1_WHCD_BLWP), D$
+  CHRSET "SPU5", SPU5_WHCD + 6 * 8, C$
+  CHRSET "SPU5", SPU5_WHCD_PTL + 6 * 8, C$
+  CHRSET "SPU5", SPU5_WHCD_PT + 6 * 8, C$
+  CHRSET "SPU5", SPU5_WHCD_PL + 6 * 8, D$
+
+  CHRREAD("BGU1", BGU1_WHCD_BR), C$
+  CHRSET "SPU5", SPU5_WHCD + 6 * 8 + 4, C$
+  CHRSET "SPU5", SPU5_WHCD_PTL + 6 * 8 + 4, C$
+  CHRSET "SPU5", SPU5_WHCD_PT + 6 * 8 + 4, C$
+  CHRSET "SPU5", SPU5_WHCD_PL + 6 * 8 + 4, C$
+
+  CHRREAD("BGU1", BGU1_WHCD_T), C$
+  CHRREAD("BGU1", BGU1_WHCD_B), D$
+  FOR I = 0 TO 3 - 1
+    CHRSET "SPU5", SPU5_WHCD + 1 + I, C$
+    CHRSET "SPU5", SPU5_WHCD_PTL + 1 + I, C$
+    CHRSET "SPU5", SPU5_WHCD_PT + 1 + I, C$
+    CHRSET "SPU5", SPU5_WHCD_PL + 1 + I, C$
+    CHRSET "SPU5", SPU5_WHCD + 6 * 8 + 1 + I, D$
+    CHRSET "SPU5", SPU5_WHCD_PTL + 6 * 8 + 1 + I, D$
+    CHRSET "SPU5", SPU5_WHCD_PT + 6 * 8 + 1 + I, D$
+    CHRSET "SPU5", SPU5_WHCD_PL + 6 * 8 + 1 + I, D$
+  NEXT
+
+  CHRREAD("BGU1", BGU1_WHCD_L), C$
+  CHRREAD("BGU1", BGU1_WHCD_R), D$
+  FOR I = 0 TO 5 - 1
+    CHRSET "SPU5", SPU5_WHCD + (1 + I) * 8, C$
+    CHRSET "SPU5", SPU5_WHCD_PTL + (1 + I) * 8, C$
+    CHRSET "SPU5", SPU5_WHCD_PT + (1 + I) * 8, C$
+    CHRSET "SPU5", SPU5_WHCD_PL + (1 + I) * 8, C$
+    CHRSET "SPU5", SPU5_WHCD + (1 + I) * 8 + 4, D$
+    CHRSET "SPU5", SPU5_WHCD_PTL + (1 + I) * 8 + 4, D$
+    CHRSET "SPU5", SPU5_WHCD_PT + (1 + I) * 8 + 4, D$
+    CHRSET "SPU5", SPU5_WHCD_PL + (1 + I) * 8 + 4, D$
+  NEXT
+
+  CHRREAD("BGU1", BGU1_WHCD_C), C$
+  FOR J = 0 TO 5 - 1
+    FOR I = 0 TO 3 - 1
+      CHRSET "SPU5", SPU5_WHCD + (1 + J) * 8 + 1 + I, C$
+      CHRSET "SPU5", SPU5_WHCD_PTL + (1 + J) * 8 + 1 + I, C$
+      CHRSET "SPU5", SPU5_WHCD_PT + (1 + J) * 8 + 1 + I, C$
+      CHRSET "SPU5", SPU5_WHCD_PL + (1 + J) * 8 + 1 + I, C$
+    NEXT
+  NEXT
+
+  FOR I = 0 TO 4 - 1
+    FOR J = 0 TO 4 - 1
+      IF J > I THEN @_LOAD_CDS_SPU_1
+      R = SPU4_CDSBL_OFS + I * 4 * 8
+      IF J == 0 THEN CHRREAD("BGU1", BGU1_WHCD_TL), C$
+      IF J != 0 THEN CHRREAD("BGU1", BGU1_WHCD_TLWP), C$
+      CHRSET "SPU4", R + J, C$
+      CHRREAD("BGU1", BGU1_WHCD_L), C$
+      FOR A = 0 TO 5 - 1
+        CHRSET "SPU4", R + 4 * (A + 1) + J, C$
+      NEXT
+      IF J == 0 THEN CHRREAD("BGU1", BGU1_WHCD_BL), C$
+      IF J != 0 THEN CHRREAD("BGU1", BGU1_WHCD_BLWP), C$
+      CHRSET "SPU4", R + 4 * 6 + J, C$
+@_LOAD_CDS_SPU_1
+    NEXT
+  NEXT
+
+  CHRREAD("BGU1", BGU1_WHCD_T), C$
+  FOR I = 0 TO 3 - 1
+    CHRSET "SPU4", SPU4_CDSTR_OFS + 0 * 4 * 2 + I, C$
+    CHRSET "SPU4", SPU4_CDSTR_OFS + 1 * 4 * 2 + I, C$
+    CHRSET "SPU4", SPU4_CDSTR_OFS + 1 * 4 * 2 + 4 * 1 + I, C$
+  NEXT
+  CHRREAD("BGU1", BGU1_WHCD_TR), C$
+  CHRSET "SPU4", SPU4_CDSTR_OFS + 0 * 4 * 2 + 3, C$
+  CHRSET "SPU4", SPU4_CDSTR_OFS + 1 * 4 * 2 + 3, C$
+  CHRREAD("BGU1", BGU1_WHCD_TRWP), C$
+  CHRSET "SPU4", SPU4_CDSTR_OFS + 1 * 4 * 2 + 4 * 1 + 3, C$
+
+  R = COL_RED: GOSUB @PUSH_R
+  R = 0: GOSUB @PUSH_R
+  GOSUB @MAKE_FRAME_CHR_R
+  FOR I = 0 TO RN - 1
+    CHRSET "SPU4", SPU4_RDLN_CD + I, RR$[I]
+  NEXT
+
+  GOSUB @POP_RS: D$ = R$
+  GOSUB @POP_RS: C$ = R$
+  GOSUB @POP_R: J = R
+  GOSUB @POP_R: I = R
+
+  ARGNUM = 0: GOSUB @LEAVE
+  RETURN
+
+
+'== END MKJRFTRT ==

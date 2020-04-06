@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!-- Time-stamp: "2013-02-22T20:27:58Z" -->
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Content-Script-Type" content="text/javascript" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-Language" content="ja,en" />
+
+<title>易双六 Youscout for PTC</title>
+
+<meta name="author" content="JRF" />
+<meta name="version" content="0.02" />
+<meta name="home" content="http://jrf.cocolog-nifty.com/archive/youscout/ptc/" />
+<meta name="archive" content="http://jrf.cocolog-nifty.com/archive/youscout/ptc/youscout_ptc.zip" />
+<meta name="keywords" content="tarot,タロット,solitaire,ソリティア,易,yi-king,yi-ching,iching,PTC,PetitComputer" />
+<meta name="description" lang="en" content="Nintendo-DS-version of Youscout. Youscout is a sort of solitaire games playing with tarot cards, inspired by arguments about Yi-Ching divination." />
+<meta name="description" lang="ja" content="ニンテンドーDSバージョンの易双六。易双六は、タロットカードを使ったソリティアの一種。易経の理論からヒントを得ている。" />
+
+<style type="text/css">
+div.main {
+  margin: 3em;
+  margin-bottom: 3em;
+}
+div.en p {
+  text-indent: 1.5em;
+}
+div.ja p {
+  text-indent: 1em;
+}
+a.game_start {
+  font-size: x-large;
+}
+span.subtitle {
+  font-size: smaller;
+}
+
+div.picture {
+  margin: 3em;
+}
+
+div.picture td {
+  padding: 0.5em;
+}
+
+span.small {
+  font-size: smaller;
+}
+
+</style>
+
+</head>
+
+<body>
+<div class="main ja" lang="ja">
+<h1>ヨウスコウ PTC</h1>
+
+<p>コレ ハ ニンテンドーDS (DSi ヤ 3DS) ヨウ ノ「ヨウスコウ」デス。コレ ハ ニンテンドー DSi ウェア ノ <a href="http://www.petitcomputer.com/">プチコンmkII</a> ジョウ デ ウゴキ マス。「ヨウスコウ」ハ タロット カード ヲ ツカッタ ソリティア ゲーム ノ イッシュ デ、「エキキョウ」ニ カンスル ギロン ノ エイキョウ ヲ ウケテイマス。</p>
+
+<p>「ヨウスコウ」ニ カンシテハ、コノ ハイフブツ ニ フクマレル YSCHELP カ 「<a href="http://jrf.cocolog-nifty.com/archive/youscout/index.html">Webバン ノ ヨウスコウ</a>」ニ イクツカ セツメイ ガ アリマス。</p>
+
+<p>「ヨウスコウ PTC」ノ ハイフブツ ハ 3ツ ノ PRG ファイル カラ ナリマス。(リンク ハ QRコード (デカイ!) ノ ビューワー ヘ イキマス。):
+
+<ul>
+<li><a href="qrcode_ysc/qrcodes.html">YOUSCOUT</a> (メイン)、</li>
+<li><a href="qrcode_mk/qrcodes.html">MKJRFTRT</a> (エ ノ ジュンビ)、</li>
+<li><a href="qrcode_hlp/qrcodes.html">YSCHELP</a> (セツメイブン)。</li>
+</ul>
+
+インストール ノ テツヅキ トシテ、「MKJRFTRT」ヲ サイショ ニ イッカイ ダケ ウゴカシテ、エ ヲ ツカウ ジュンビ ヲ スル ヒツヨウ ガ アリマス。
+</p>
+
+<p>プログラム ノ ソース ヲ カイハツ=キット ト トモ ニ ダウンロード デキマス。TAR.GZ ハ QRコード ヲ フクミマセン。ZIP ハ フクミマス。ZIP ハ ホカ ノ サイト ニ アリマス。ワタシ ノ サイト ノ プロバイダ ガ 1Mバイト ヲ コエル ファイル ヲ オカセテ クレナイカラデス。コレラ ノ アップデート ノ ジョウホウ ハ、ワタシ ノ ブログ ノ キジ「<a href="http://jrf.cocolog-nifty.com/software/2013/02/post.html">カイハツ=キ</a>」(カンジ アリ ニホンゴ)ノ コメント=ラン ニ カイテイキマス。
+
+<ul>
+<li><a href="https://www.sugarsync.com/pf/D252372_79_8319277143">youscout_ptc.zip</a></li>
+<li><a href="http://jrf.cocolog-nifty.com/archive/youscout/ptc/youscout_ptc.tar.gz">youscout_ptc.tar.gz</a></li>
+</ul>
+</p>
+
+<p>チョサクシャ ハ JRF ( <a href="http://jrf.cocolog-nifty.com/">http://jrf.cocolog-nifty.com/</a> ) デス。ワタシ ハ コノ ハイフブツ ガ「パブリック ドメイン」ニ ナルヨウ イシヒョウジ シマス。タダ、ソチラ ノ ジジョウ デ、「<a href="http://www.opensource.org/licenses/bsd-license.php">BSD ライセンス</a>」カ ノ モノ トシテ アツカッテモ カマイマセン。コレ ニ カンシテ ハ ゴクショウ バージョン ノ JRF Tarot モ オナジデス。ブラウザ=バン ノ「JRF Tarot」ハ ベツ ノ ジョウケン カ ニ アリマシタ ケレドモ。</p>
+
+<p>ヒトツ シツモン ガ アリマス。200ネン マエ ノ カイガ ハ「パブリック ドメイン」ニ マチガイ ナイデス。デモ、ソノ デンシ=コピー ヲ ホンモノ トシテ ウッテ イイデショウカ？マタ ハ、ソレ ヲ ジブン ガ ツクッタ ト シラナイモノ ニ ショウカイ シテ ヨイデショウカ？ワタシ ハ ソウスベキ ダト オモイマセン ガ、コノ ゴクショウ バージョン ノ JRF Tarot ニ カンシテハ ソウイッタ コト モ ミトメタイ ノ デス。ワタシ ハ ダレカ ガ コノ デンシ=コピー ヲ カリ ニ ホントウ ノ イロ ガ サイゲン デキナクテモ(タトエバ モノクロ デモ) ホンモノ ト シテ ウル ノ ヲ ミトメタイ デス。ワタシ ハ ダレカ ガ タダ ゴクショウ ノ タロット ノ ヨミ カタ ヲ カンガエダシタ ダケデ (タトエバ モジ ノ ヨウ ニ ツカッテ) チョサクシャ ノ ヒトリ ト ナノル コト ヲ ミトメタイ デス。「パブリックドメイン」トイウノハ ワタシ ノ イシ デ アナタ ヲ ユウリ ニ スルコト ヲ ソガイ シマセンカ？アナタ ノ ユウリ ナ ヨウ ニ カイシャク シテクダサイ。</p>
+
+</div>
+
+<div class="main en" lang="en">
+<h1>Youscout for PTC</h1>
+
+<p>This is a Nintendo-DS (DSi or 3DS) version of "Youscout" which can run in the <a href="http://www.petitcomputer.com/">Petit Computer</a> of Nintendo DSi-ware.  "Youscout" is is a sort of solitaire games playing with Tarot cards, inspired by arguments about Yi-Ching divination.</p>
+
+<p>About "Youscout", you can find some explanation in YSCHELP included in this distribution(s) and in "<a href="http://jrf.cocolog-nifty.com/archive/youscout/index.html">Youscout Web Version</a>".</p>
+
+<p>The distribution of "Youscout for PTC" consists of the 3 PRG-files. (Links are to the viewer of (huge!) QR-codes.):
+
+<ul>
+<li><a href="qrcode_ysc/qrcodes.html">YOUSCOUT</a> (Main),</li>
+<li><a href="qrcode_mk/qrcodes.html">MKJRFTRT</a> (preparing graphics),</li>
+<li><a href="qrcode_hlp/qrcodes.html">YSCHELP</a> (document).</li>
+</ul>
+
+As an installation, you must run "MKJRFTRT" to prepare graphics only once at the first time.
+</p>
+
+<p>You can download the sources of them with development accessories.  TAR.GZ doesn't include the QR-codes but ZIP includes them.  ZIP locates on the other site because the provider of my site doesn't allow over 1M bytes per file.  Update information of them will be written in the comment area of one entry titled "<a href="http://jrf.cocolog-nifty.com/software/2013/02/post.html">Development Diary</a>" of my blog (in Japanese).
+
+<ul>
+<li><a href="https://www.sugarsync.com/pf/D252372_79_8319277143">youscout_ptc.zip</a></li>
+<li><a href="http://jrf.cocolog-nifty.com/archive/youscout/ptc/youscout_ptc.tar.gz">youscout_ptc.tar.gz</a></li>
+</ul>
+</p>
+
+<p>The author is JRF ( <a href="http://jrf.cocolog-nifty.com/">http://jrf.cocolog-nifty.com/</a> ).  I intended this distribution(s) to be public-domain same as the browser-game version, but you may treat it as such under the <a href="http://www.opensource.org/licenses/bsd-license.php">BSD Licence</a>.  This includes the tiny version of the JRF Tarot, whereas the JRF Tarot of the browser game version has different condition.</p>
+
+<p>There is a question.  A drawing art of 200 years ago must be "Public Domain", but can you sell the digital copy as genuine freely or represent you as (one of) the author for innocent people?  I think I shouldn't, but I want to admit about the tiny version of the JRF tarot such a thing.  I admit someone sell the digitall copy of it as genuine even if it can't have genuine color like monochrome.  I admit someone represent as one of the author who can give only another meaning of the tiny tarot like literal characters.  If the license were truly "Public Domain", what could assure you my desiring advantage?  You can interpret the condition advantageously.</p>
+
+</div>
+
+<div class="main ja" lang="ja">
+<h1>易双六 PTC</h1>
+
+<p>これはニンテンドーDS (DSi or 3DS)用の『易双六』で、ニンテンドー DSi ウェアの『<a href="http://www.petitcomputer.com/">プチコンmkII</a>』用の BASIC プログラムである。『易双六』はタロットカードを使ったソリティアゲームの一種で、易の議論の影響を受けて作られた。</p>
+
+<p>『易双六』に関しては、この配布物に含まれる YSCHELP、または、《<a href="http://jrf.cocolog-nifty.com/archive/youscout/index.html">Web版の易双六</a>》に少し詳しい説明がある。</p>
+
+<p>『易双六 PTC』の配布は三つの PRG ファイルからなる。(なお、リンクは、QRコード(とても大きい!)へ通じている。):
+
+<ul>
+<li><a href="qrcode_ysc/qrcodes.html">YOUSCOUT</a> (メイン)、</li>
+<li><a href="qrcode_mk/qrcodes.html">MKJRFTRT</a> (グラフィックの準備)、</li>
+<li><a href="qrcode_hlp/qrcodes.html">YSCHELP</a> (ドキュメント)。</li>
+</ul>
+
+インストールの手続きとして、MKJRFTRT を最初に一度だけ実行する必要がある。これは、YOUSCOUT と YSCHELP のためにグラフィックの準備をしておくためのもの。
+</p>
+
+<p>ソースは、ちょっとした開発キットと共に、以下からダウンロードできる。TAR.GZ は、QRコードを含まないが、ZIP のほうは含む。これらの更新情報は<a href="http://jrf.cocolog-nifty.com/software/2013/02/post.html">開発記</a>のコメント欄に書いていく。なお、ZIP が他のサイトに置いてあるのは、ここのプロバイダが 1M バイト制限を課しているため。orz
+
+<ul>
+<li><a href="https://www.sugarsync.com/pf/D252372_79_8319277143">youscout_ptc.zip</a></li>
+<li><a href="http://jrf.cocolog-nifty.com/archive/youscout/ptc/youscout_ptc.tar.gz">youscout_ptc.tar.gz</a></li>
+</ul>
+</p>
+
+<p>著作者は JRF ( <a href="http://jrf.cocolog-nifty.com/">http://jrf.cocolog-nifty.com/</a> )。私は、この配布物が "Public Domain" になるように意図している。ただ、そちらの事情によっては、<a href="http://www.opensource.org/licenses/bsd-license.php">BSD License</a>下にあるとして扱ってよい。この点は、これに付いてくる JRF Tarot の tiny 版に関しても同じである。ブラウザ版に用いた JRF Tarot の絵は、この点留保があったが、tiny 版に関してはそれはない。QR コードもある種の絵で、元の絵以上の真正性を保たせた改変という側面があるが、それを生成し売ったからといって、同一性保持権や原本の価値毀損を問題にするようなことも当然ない。</p>
+
+<p>ただ、一つ問いがある。200年前の絵画が Public Domain だというのは当然だとして、そのデジタルコピーを「本物」として売っていいだろうか？または、知らいない者に自分を著作者のように詐称(!)してもよいだろうか？私は私に関しては少なくともそうしないというが、ただ、この tiny 版の JRF Tarot を他者がそのように扱うことに関しては、むしろ積極的に認めたい。誰かが例えばニンテンドーDSの互換機みたいなのを将来造って争いがあり、そこで「デジタル・コピー」を使うな、劣化モノクロしか認められないといったようなことがもしあったとしても、「本物」としてちょっと色を変えた tiny 版が売られているのはむしろヨシとしたい。誰かが示唆的に tiny 版を使いそこに私の意図しない何がしかの意味をこめ、まるで書道か何かのように扱って、自分の著作なのだとするのは、ありがたいことだとむしろ思う。"Public Domain" というのは、私があなた(一般の皆)にこのような有利性を特別に認めるといった権威まで放棄することを意味するのだろうか？基本、将来のあなたにも有利なように解釈してもらえばいい。</p>
+
+</div>
+
+<div class="picture" lang="ja">
+<table align="center" border="0" cellpadding="0" cellspacing="0">
+<tr><td><img id="playing" width="640" height="480" src="youscout_ptc.jpg" /></td>
+<td>
+<p lang="ja">プレイ チュウ ノ ヨウスコウ PTC。</p>
+
+<p lang="en">Youscout for PTC being played by the author.</p>
+
+<p lang="ja">プレイ中の『易双六 PTC』。</p>
+</td>
+</tr>
+<tr><td><img id="playing" width="640" height="480" src="youscout_ptc_urev.jpg" /></td>
+<td>
+</td>
+</tr>
+</table>
+</div>
+
+</body>
+</html>

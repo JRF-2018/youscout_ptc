@@ -1,0 +1,207 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Content-Script-Type" content="text/javascript" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-Language" content="ja,en" />
+
+<title>YOUSCOUT - QR codes</title>
+
+<script type="text/javascript">
+var QRCODES_NUM = 67;
+var QRCODES_NUM_PAD = 3;
+var current_qr = 1;
+
+function pad_left(s, num, pad) {
+  s = s.toString();
+  var r = s;
+  for (var i = 0; i < num - s.length; i++) {
+    r = pad + r;
+  }
+  return r.substr(r.length - num, num);
+}
+
+function add_event_listener (elt, ev, f) {
+  if (elt.addEventListener) {
+    elt.addEventListener(ev, f, false);
+    if (ev == "input") {
+      elt.addEventListener("textInput", f, false);
+    }
+  } else {
+    if (ev == "input") {
+      elt.attachEvent("onpropertychange", f);
+    } else {
+      elt.attachEvent("on" + ev, f);
+    }
+  }
+}
+
+function change (num) {
+  if (num > QRCODES_NUM) {
+    num = 1;
+  }
+  if (num < 1) {
+    num = QRCODES_NUM;
+  }
+  current_qr = num;
+  document.getElementById('control-num').value
+    = pad_left(num.toString(), QRCODES_NUM_PAD, "0");
+  img = document.getElementById('qr-image');
+  img.src = "qr" + pad_left(num.toString(), QRCODES_NUM_PAD, "0") + ".png";
+}
+
+function change_num (ev) {
+  if (ev.keyCode == 13) { //keyCode 13 must be "\n".
+    change(parseInt(document.getElementById('control-num').value, 10));
+  }
+}
+
+function next_qr (ev) {
+  change(current_qr + 1);
+}
+
+function prev_qr (ev) {
+  change(current_qr - 1);
+}
+
+function show_all_codes (ev) {
+  var html = "";
+  for (var i = 1; i <= QRCODES_NUM; i++) {
+    var src = "qr" + pad_left(i.toString(), QRCODES_NUM_PAD, "0") + ".png";
+    html += '<p><img src="' + src + '" width="565" height="565" /></p>';
+  }
+  document.getElementById('all-qrcodes').innerHTML = html;
+}
+    
+function init () {
+  var mdiv = document.getElementById('main');
+
+  var html = ''
+    + '<p>Key press of "→" or "←" will work.</p>'
+    + '<p>"→" ヤ "←" ノ キー デモ ウゴクハズ。</p>'
+    + '<form id="control-panel" onsubmit="return false;">'
+    + '<table id="control-panel-table">'
+    + '<tr><td align="center">'
+    + '<img id="qr-image" width="565" height="565" />'
+    + '</td></tr>'
+    + '<tr><td align="center">'
+    + '<input id="control-prev" type="button" value="←"/>'
+    + '<input id="control-num" type="text" size="' + QRCODES_NUM_PAD + '" />'
+    + '<span id="qr-num">/' + QRCODES_NUM + '</span>'
+    + '<input id="control-next" type="button" value="→"/>'
+    + '</td></tr>'
+    + '</table>'
+    + '</form>'
+    + '<p><a id="show-all" href="#">Show all codes. ゼンブ ヒョウジ。</a></p>'
+    + '<div id="all-qrcodes"></div>'
+  ;
+
+  var f = function (ev) {
+    if (ev.keyCode == 39) { //keyCode 39 must be "→"
+      next_qr(ev);
+    } else if (ev.keyCode == 37) { //keyCode 39 must be "←"
+      prev_qr(ev);
+    }
+  }
+
+  mdiv.innerHTML = html;
+  add_event_listener(document, "keydown", f);
+  add_event_listener(document.getElementById('control-prev'),
+		    'click', prev_qr);
+  add_event_listener(document.getElementById('control-next'),
+		     'click', next_qr);
+  add_event_listener(document.getElementById('control-num'),
+		     'keydown', change_num);
+  add_event_listener(document.getElementById('show-all'),
+		     'click', show_all_codes);
+  change(current_qr);
+}
+
+window.onload = init;
+</script>
+
+<style type="text/css">
+  #control-prev, #control-next, #control-num, #qr-num {
+    font-size: xx-large;
+  }
+</style>
+
+<body>
+<h2>YOUSCOUT version 0.06 - QR codes</h2>
+
+<div id="main"></div>
+
+<noscript>
+<p><img src="qr000.png" width="565" height="565" /></p>
+<p><img src="qr001.png" width="565" height="565" /></p>
+<p><img src="qr002.png" width="565" height="565" /></p>
+<p><img src="qr003.png" width="565" height="565" /></p>
+<p><img src="qr004.png" width="565" height="565" /></p>
+<p><img src="qr005.png" width="565" height="565" /></p>
+<p><img src="qr006.png" width="565" height="565" /></p>
+<p><img src="qr007.png" width="565" height="565" /></p>
+<p><img src="qr008.png" width="565" height="565" /></p>
+<p><img src="qr009.png" width="565" height="565" /></p>
+<p><img src="qr010.png" width="565" height="565" /></p>
+<p><img src="qr011.png" width="565" height="565" /></p>
+<p><img src="qr012.png" width="565" height="565" /></p>
+<p><img src="qr013.png" width="565" height="565" /></p>
+<p><img src="qr014.png" width="565" height="565" /></p>
+<p><img src="qr015.png" width="565" height="565" /></p>
+<p><img src="qr016.png" width="565" height="565" /></p>
+<p><img src="qr017.png" width="565" height="565" /></p>
+<p><img src="qr018.png" width="565" height="565" /></p>
+<p><img src="qr019.png" width="565" height="565" /></p>
+<p><img src="qr020.png" width="565" height="565" /></p>
+<p><img src="qr021.png" width="565" height="565" /></p>
+<p><img src="qr022.png" width="565" height="565" /></p>
+<p><img src="qr023.png" width="565" height="565" /></p>
+<p><img src="qr024.png" width="565" height="565" /></p>
+<p><img src="qr025.png" width="565" height="565" /></p>
+<p><img src="qr026.png" width="565" height="565" /></p>
+<p><img src="qr027.png" width="565" height="565" /></p>
+<p><img src="qr028.png" width="565" height="565" /></p>
+<p><img src="qr029.png" width="565" height="565" /></p>
+<p><img src="qr030.png" width="565" height="565" /></p>
+<p><img src="qr031.png" width="565" height="565" /></p>
+<p><img src="qr032.png" width="565" height="565" /></p>
+<p><img src="qr033.png" width="565" height="565" /></p>
+<p><img src="qr034.png" width="565" height="565" /></p>
+<p><img src="qr035.png" width="565" height="565" /></p>
+<p><img src="qr036.png" width="565" height="565" /></p>
+<p><img src="qr037.png" width="565" height="565" /></p>
+<p><img src="qr038.png" width="565" height="565" /></p>
+<p><img src="qr039.png" width="565" height="565" /></p>
+<p><img src="qr040.png" width="565" height="565" /></p>
+<p><img src="qr041.png" width="565" height="565" /></p>
+<p><img src="qr042.png" width="565" height="565" /></p>
+<p><img src="qr043.png" width="565" height="565" /></p>
+<p><img src="qr044.png" width="565" height="565" /></p>
+<p><img src="qr045.png" width="565" height="565" /></p>
+<p><img src="qr046.png" width="565" height="565" /></p>
+<p><img src="qr047.png" width="565" height="565" /></p>
+<p><img src="qr048.png" width="565" height="565" /></p>
+<p><img src="qr049.png" width="565" height="565" /></p>
+<p><img src="qr050.png" width="565" height="565" /></p>
+<p><img src="qr051.png" width="565" height="565" /></p>
+<p><img src="qr052.png" width="565" height="565" /></p>
+<p><img src="qr053.png" width="565" height="565" /></p>
+<p><img src="qr054.png" width="565" height="565" /></p>
+<p><img src="qr055.png" width="565" height="565" /></p>
+<p><img src="qr056.png" width="565" height="565" /></p>
+<p><img src="qr057.png" width="565" height="565" /></p>
+<p><img src="qr058.png" width="565" height="565" /></p>
+<p><img src="qr059.png" width="565" height="565" /></p>
+<p><img src="qr060.png" width="565" height="565" /></p>
+<p><img src="qr061.png" width="565" height="565" /></p>
+<p><img src="qr062.png" width="565" height="565" /></p>
+<p><img src="qr063.png" width="565" height="565" /></p>
+<p><img src="qr064.png" width="565" height="565" /></p>
+<p><img src="qr065.png" width="565" height="565" /></p>
+<p><img src="qr066.png" width="565" height="565" /></p>
+
+</noscript>
+</body>
+</html>

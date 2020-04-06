@@ -1,0 +1,983 @@
+'== BEGIN CTRLLIB ==
+@CTRLLIB_INIT
+CTRLLIB_VER$ = "0.04" 'Time-stamp: <2013-02-27T23:10:19Z>
+CTRLLIB_URI$ = "http://jrf.cocolog-nifty.com/archive/ptc/ctrllib.prg"
+
+'REQUIRE "STACKLIB"
+'REQUIRE "STDLIB"
+
+'Global variables and constants.
+IF CTRL_LANG$ == "" THEN CTRL_LANG$ = "EN" '"EN": English,  "JA": Japanese.
+
+MSG_YES$ = "": MSG_NO$ = "": MSG_OK$ = "": MSG_CANCEL$ = ""
+MSG_SET$ = "": MSG_DEFAULT$ = "": MSG_PERIOD$ = "": MSG_COMMA$ = ""
+MSG_PREV$ = "": MSG_NEXT$ = "": MSG_BACK$ = ""
+
+
+MNU_CURSOR$ = CHR$(11) 'Arrow hand.
+MNU_CURSOR_COL = 11
+MNU_CON_COL = 1
+
+BUTTON_INTERVAL = 60
+PREV_BUTTON = 0
+
+BEEP_SELECT = 48: BEEP_CANCEL = 51: BEEP_CLICK = 62: BEEP_POPUP = 61
+
+'Local static variables.
+IF MNU_CTRL_LEN == 0 THEN MNU_CTRL_LEN = 64
+DIM MNU_CTRL$[MNU_CTRL_LEN]
+MNU_CTRL_N = 0
+MNU_CTRL_SEL = -1
+
+IF MNU_STACK_LEN == 0 THEN MNU_STACK_LEN = 256
+DIM MNU_STACK$[MNU_STACK_LEN]
+MNU_SP = -1
+
+IF TCH_CTRL_LEN == 0 THEN TCH_CTRL_LEN = 64
+DIM TCH_CTRL$[TCH_CTRL_LEN]
+TCH_CTRL_N = 0
+PREV_BTN_TM_H = -1
+PREV_BTN_TM_L = -1
+PREV_TCH_TM = -1
+TCH_CTRL_LSEL = -1
+TCH_CTRL_SEL = -1
+
+R$ = CTRL_LANG$: GOSUB @PUSH_RS
+GOSUB @LOAD_MSG_BASIC
+
+'PROVIDE "CTRLLIB"
+RETURN
+
+
+@LOAD_MSG_BASIC '(LANG$:STRING): NONE
+  R$ = "@LOAD_MSG_BASIC": ARGNUM = 1: GOSUB @ENTER
+
+  R$ = LANG$: GOSUB @PUSH_RS
+
+  LANG$ = STACK$[BP + 1]
+
+  RESTORE "@MSG_BASIC_" + LANG$
+  READ MSG_YES$, MSG_NO$, MSG_OK$, MSG_CANCEL$
+  READ MSG_SET$, MSG_DEFAULT$, MSG_PERIOD$, MSG_COMMA$
+  READ MSG_PREV$, MSG_NEXT$, MSG_BACK$
+  CTRL_LANG$ = LANG$
+
+  GOSUB @POP_RS: LANG$ = R$
+
+  ARGNUM = 1: GOSUB @LEAVE
+  RETURN
+
+
+@MSG_BASIC_EN
+DATA "Yes", "No", "OK", "Cancel", "Set", "Default", ".", ",", "PREV.", "NEXT", "BACK"
+@MSG_BASIC_JA
+DATA "ハイ", "イイエ", "OK", "キャンセル", "セッテイ", "デフォルト", "。", "、", "マエ ヘ.", "ツギ ヘ", "モドル"
+
+
+@MNU_CTRL_NEW '(NONE): NONE
+  R$ = "@MNU_CTRL_NEW": ARGNUM = 0: GOSUB @ENTER
+  MNU_CTRL_N = 0
+  MNU_CTRL_SEL = -1
+  ARGNUM = 0: GOSUB @LEAVE
+  RETURN
+
+'If VALUE$ == "", the region is ignored.
+@MNU_CTRL_ADD '(CX:NUMBER, CY:NUMBER, CW:NUMBER, CH:NUMBER, VALUE$:STRING): NONE
+  R$ = "@MNU_CTRL_ADD": ARGNUM = 5: GOSUB @ENTER
+
+  R = CX: GOSUB @PUSH_R
+  R = CY: GOSUB @PUSH_R
+  R = CW: GOSUB @PUSH_R
+  R = CH: GOSUB @PUSH_R
+  R$ = VALUE$: GOSUB @PUSH_RS
+
+  CX = VAL(STACK$[BP + 1])
+  CY = VAL(STACK$[BP + 2])
+  CW = VAL(STACK$[BP + 3])
+  CH = VAL(STACK$[BP + 4])
+  VALUE$ = STACK$[BP + 5]
+
+  RR$[0] = "REGION"
+  RR$[1] = VALUE$
+  RR$[2] = STR$(CX)
+  RR$[3] = STR$(CY)
+  RR$[4] = STR$(CW)
+  RR$[5] = STR$(CH)
+  RN = 6
+  GOSUB @PUSH_RR
+  GOSUB @POP_RS
+  MNU_CTRL$[MNU_CTRL_N] = R$
+  MNU_CTRL_N = MNU_CTRL_N + 1
+
+  GOSUB @POP_RS: VALUE$ = R$
+  GOSUB @POP_R: CH = R
+  GOSUB @POP_R: CW = R
+  GOSUB @POP_R: CY = R
+  GOSUB @POP_R: CX = R
+
+  ARGNUM = 5: GOSUB @LEAVE
+  RETURN
+
+
+'If VALUE$ == "", the region is ignored.
+@MNU_CTRL_LONG '(CX:NUMBER, CY:NUMBER, CW:NUMBER, CH:NUMBER, TIME: NUMBER, VALUE$:STRING): NONE
+  R$ = "@MNU_CTRL_LONG": ARGNUM = 6: GOSUB @ENTER
+
+  R = CX: GOSUB @PUSH_R
+  R = CY: GOSUB @PUSH_R
+  R = CW: GOSUB @PUSH_R
+  R = CH: GOSUB @PUSH_R
+  R = TIME: GOSUB @PUSH_R
+  R$ = VALUE$: GOSUB @PUSH_RS
+
+  CX = VAL(STACK$[BP + 1])
+  CY = VAL(STACK$[BP + 2])
+  CW = VAL(STACK$[BP + 3])
+  CH = VAL(STACK$[BP + 4])
+  TIME = VAL(STACK$[BP + 5])
+  VALUE$ = STACK$[BP + 6]
+
+  RR$[0] = "LONG"
+  RR$[1] = VALUE$
+  RR$[2] = STR$(CX)
+  RR$[3] = STR$(CY)
+  RR$[4] = STR$(CW)
+  RR$[5] = STR$(CH)
+  RR$[6] = STR$(TIME)
+  RN = 7
+  GOSUB @PUSH_RR
+  GOSUB @POP_RS
+  MNU_CTRL$[MNU_CTRL_N] = R$
+  MNU_CTRL_N = MNU_CTRL_N + 1
+
+  GOSUB @POP_RS: VALUE$ = R$
+  GOSUB @POP_R: TIME = R
+  GOSUB @POP_R: CH = R
+  GOSUB @POP_R: CW = R
+  GOSUB @POP_R: CY = R
+  GOSUB @POP_R: CX = R
+
+  ARGNUM = 6: GOSUB @LEAVE
+  RETURN
+
+
+'If VALUE$ == "", the BTN$ is ignored.
+@MNU_CTRL_BUTTON '(BTN$:STRING, VALUE$:STRING): NONE
+  R$ = "@MNU_CTRL_BUTTON": ARGNUM = 2: GOSUB @ENTER
+
+  R$ = BTN$: GOSUB @PUSH_RS
+  R$ = VALUE$: GOSUB @PUSH_RS
+
+  BTN$ = STACK$[BP + 1]
+  VALUE$ = STACK$[BP + 2]
+
+  RR$[0] = "BUTTON"
+  RR$[1] = VALUE$
+  RR$[2] = BTN$
+  RN = 3
+  GOSUB @PUSH_RR
+  GOSUB @POP_RS
+  MNU_CTRL$[MNU_CTRL_N] = R$
+  MNU_CTRL_N = MNU_CTRL_N + 1
+
+  GOSUB @POP_RS: VALUE$ = R$
+  GOSUB @POP_RS: BTN$ = R$
+
+  ARGNUM = 2: GOSUB @LEAVE
+  RETURN
+
+
+@MNU_CTRL_SELECT '(VALUE$:STRING): NUMBER
+  R$ = "@MNU_CTRL_SELECT": ARGNUM = 1: GOSUB @ENTER
+
+  R$ = VALUE$: GOSUB @PUSH_RS
+  R = I: GOSUB @PUSH_R
+
+  VALUE$ = STACK$[BP + 1]
+
+  I = 0
+  MNU_CTRL_SEL = -1
+@_MNU_CTRL_S_LP
+  IF I >= MNU_CTRL_N THEN @_MNU_CTRL_S_E
+  R$ = MNU_CTRL$[I]
+  GOSUB @PUSH_RS
+  GOSUB @POP_RR
+  IF RR$[0] == "REGION" AND RR$[1] == VALUE$ THEN MNU_CTRL_SEL = I: GOTO @_MNU_CTRL_S_E
+  I = I + 1
+  GOTO @_MNU_CTRL_S_LP
+@_MNU_CTRL_S_E
+
+  GOSUB @POP_R: I = R
+  GOSUB @POP_RS: VALUE$ = R$
+
+  ARGNUM = 1: GOSUB @LEAVE
+  RT$ = "NUMBER"
+  R = MNU_CTRL_SEL
+  RETURN
+
+
+@PUSH_MNU_CTRL '(NONE): NONE
+  R$ = "@PUSH_MNU_CTRL": ARGNUM = 0: GOSUB @ENTER
+
+  R = I: GOSUB @PUSH_R
+
+  IF MNU_SP + 1 + MNU_CTRL_N >= MNU_STACK_LEN THEN @_PUSH_MNU_C_ERR
+  MNU_SP = MNU_SP + 1 + MNU_CTRL_N
+  I = 0
+@_PUSH_MNU_C_LP
+  IF I >= MNU_CTRL_N THEN @_PUSH_MNU_C_1
+  MNU_STACK$[MNU_SP - I - 1] = MNU_CTRL$[I]
+  I = I + 1
+  GOTO @_PUSH_MNU_C_LP
+@_PUSH_MNU_C_1
+  RR$[0] = STR$(MNU_CTRL_N)
+  RR$[1] = STR$(MNU_CTRL_SEL)
+  RN = 2
+  GOSUB @PUSH_RR
+  GOSUB @POP_RS
+  MNU_STACK$[MNU_SP] = R$
+
+  GOSUB @POP_R: I = R
+
+  ARGNUM = 0: GOSUB @LEAVE
+  RETURN
+
+@_PUSH_MNU_C_ERR
+  PRINT "Menu Controller: Stack Full!"
+  STOP: RETURN
+
+
+@POP_MNU_CTRL '(NONE): NONE
+  R$ = "@POP_MNU_CTRL": ARGNUM = 0: GOSUB @ENTER
+
+  R = I: GOSUB @PUSH_R
+
+  IF MNU_SP < 0 THEN @_POP_MNU_C_ERR
+  R$ = MNU_STACK$[MNU_SP]
+  GOSUB @PUSH_RS
+  GOSUB @POP_RR
+  MNU_CTRL_N = VAL(RR$[0])
+  MNU_CTRL_SEL = VAL(RR$[1])
+
+  IF MNU_SP - MNU_CTRL_N - 1 < -1 THEN @_POP_MNU_C_ERR
+  I = 0
+@_POP_MNU_C_LP
+  IF I >= MNU_CTRL_N THEN @_POP_MNU_C_1
+  MNU_CTRL$[I] = MNU_STACK$[MNU_SP - I - 1]
+  I = I + 1
+  GOTO @_POP_MNU_C_LP
+@_POP_MNU_C_1
+  MNU_SP = MNU_SP - MNU_CTRL_N - 1
+
+  GOSUB @POP_R: I = R
+
+  ARGNUM = 0: GOSUB @LEAVE
+  RETURN
+
+@_POP_MNU_C_ERR
+  PRINT "Menu Controller: Out of Stack!"
+  STOP: RETURN
+
+
+@MNU_CTRL_LOOP '(NONE): STRING
+  R$ = "@MNU_CTRL_LOOP": ARGNUM = 0: GOSUB @ENTER
+
+  R = I: GOSUB @PUSH_R
+  R = X: GOSUB @PUSH_R
+  R = Y: GOSUB @PUSH_R
+  R = SEL: GOSUB @PUSH_R
+  R = PREV_TCH: GOSUB @PUSH_R
+  R = BTN_WAIT: GOSUB @PUSH_R
+  R = PREV_CX: GOSUB @PUSH_R
+  R = PREV_CY: GOSUB @PUSH_R
+  R = PREV_COL: GOSUB @PUSH_R
+  R$ = PREV_CHR$: GOSUB @PUSH_RS
+  R$ = S$: GOSUB @PUSH_RS
+  R = LSEL: GOSUB @PUSH_R
+
+  PREV_CHR$ = ""
+  SEL = -1
+  BTN_WAIT = 0
+  LSEL = -1
+  PREV_TCH_TM = TCHTIME
+
+  PREV_BUTTON = BUTTON(0)
+  GOSUB @_MNU_CTRL_L_TCH
+  PREV_TCH = R
+
+  IF PREV_BUTTON != 0 THEN BTN_WAIT = BUTTON_INTERVAL
+
+  IF MNU_CTRL_SEL >= 0 THEN SEL = MNU_CTRL_SEL: GOTO @_MNU_CTRL_L_SL
+@_MNU_CTRL_L_BLP
+  A = BUTTON(0)
+  IF ((PREV_BUTTON XOR A) AND A) != 0 THEN @_MNU_CTRL_L_CB
+  PREV_BUTTON = A
+  IF A != 0 AND BTN_WAIT < 1 THEN @_MNU_CTRL_L_CB
+  IF A != 0 THEN BTN_WAIT = BTN_WAIT - 1
+  GOSUB @_MNU_CTRL_L_TCH
+  A = R
+  IF A >= 0 AND PREV_TCH == -1 AND A == SEL THEN @_MNU_CTRL_L_CT
+  IF A >= 0 AND A != SEL THEN PREV_TCH = A: SEL = A: GOTO @_MNU_CTRL_L_SL
+  PREV_TCH = A
+  VSYNC 1
+  GOTO @_MNU_CTRL_L_BLP
+
+@_MNU_CTRL_L_CB
+  R = A
+  IF PREV_BUTTON != A THEN A = (PREV_BUTTON XOR A) AND A
+  PREV_BUTTON = R
+  X = -1
+  Y = -1
+
+  BTN_WAIT = BUTTON_INTERVAL
+  PREV_BTN_TM_L = MAINCNTL
+  PREV_BTN_TM_H = MAINCNTH
+
+  A$ = ""
+  IF (A AND BUTTON_START) != 0 THEN A$ = "START"
+  IF (A AND BUTTON_UP) != 0 THEN A$ = "UP"
+  IF (A AND BUTTON_DOWN) != 0 THEN A$ = "DOWN"
+  IF (A AND BUTTON_LEFT) != 0 THEN A$ = "LEFT"
+  IF (A AND BUTTON_RIGHT) != 0 THEN A$ = "RIGHT"
+  IF (A AND BUTTON_A) != 0 THEN A$ = "A"
+  IF (A AND BUTTON_B) != 0 THEN A$ = "B"
+  IF (A AND BUTTON_X) != 0 THEN A$ = "X"
+  IF (A AND BUTTON_Y) != 0 THEN A$ = "Y"
+  IF (A AND BUTTON_L) != 0 THEN A$ = "L"
+  IF (A AND BUTTON_R) != 0 THEN A$ = "R"
+  IF A$ == "" THEN @_MNU_CTRL_L_BLP
+  I = 0
+@_MNU_CTRL_L_CB1
+  IF I >= MNU_CTRL_N THEN @_MNU_CTRL_L_CB2
+  R$ = MNU_CTRL$[I]
+  GOSUB @PUSH_RS
+  GOSUB @POP_RR
+  IF RR$[0] == "BUTTON" AND RR$[2] == A$ AND RR$[1] == "" THEN @_MNU_CTRL_L_BLP
+  IF RR$[0] == "BUTTON" AND RR$[2] == A$ THEN A$ = RR$[1]: GOTO @_MNU_CTRL_L_E
+  I = I + 1
+  GOTO @_MNU_CTRL_L_CB1
+@_MNU_CTRL_L_CB2
+  IF A$ == "A" AND SEL != -1 THEN @_MNU_CTRL_L_CT
+  IF A$ == "B" THEN @_MNU_CTRL_L_EN
+
+  IF A$ != "UP" AND A$ != "LEFT" THEN @_MNU_CTRL_L_CB3
+  I = SEL - 1
+  IF I < 0 THEN @_MNU_CTRL_L_CBU1
+@_MNU_CTRL_L_CBU
+  R$ = MNU_CTRL$[I]
+  GOSUB @PUSH_RS
+  GOSUB @POP_RR
+  IF RR$[0] == "REGION" AND RR$[1] != ""  THEN SEL = I: GOTO @_MNU_CTRL_L_SL
+  I = I - 1
+  IF I >= 0 THEN @_MNU_CTRL_L_CBU
+@_MNU_CTRL_L_CBU1
+  I = MNU_CTRL_N - 1
+@_MNU_CTRL_L_CBU2
+  R$ = MNU_CTRL$[I]
+  GOSUB @PUSH_RS
+  GOSUB @POP_RR
+  IF RR$[0] == "REGION" AND RR$[1] != ""  THEN SEL = I: GOTO @_MNU_CTRL_L_SL
+  I = I - 1
+  IF I >= 0 THEN @_MNU_CTRL_L_CBU2
+  GOTO @_MNU_CTRL_L_BLP
+
+@_MNU_CTRL_L_CB3
+  IF A$ != "DOWN" AND A$ != "RIGHT" THEN @_MNU_CTRL_L_BLP
+  I = SEL + 1
+  IF I <= 0 OR I >= MNU_CTRL_N THEN @_MNU_CTRL_L_CBD1
+@_MNU_CTRL_L_CBD
+  R$ = MNU_CTRL$[I]
+  GOSUB @PUSH_RS
+  GOSUB @POP_RR
+  IF RR$[0] == "REGION" AND RR$[1] != "" THEN SEL = I: GOTO @_MNU_CTRL_L_SL
+  I = I + 1
+  IF I < MNU_CTRL_N THEN @_MNU_CTRL_L_CBD
+@_MNU_CTRL_L_CBD1
+  I = 0
+@_MNU_CTRL_L_CBD2
+  R$ = MNU_CTRL$[I]
+  GOSUB @PUSH_RS
+  GOSUB @POP_RR
+  IF RR$[0] == "REGION" AND RR$[1] != ""  THEN SEL = I: GOTO @_MNU_CTRL_L_SL
+  I = I + 1
+  IF I < MNU_CTRL_N THEN @_MNU_CTRL_L_CBD2
+  GOTO @_MNU_CTRL_L_BLP
+
+@_MNU_CTRL_L_CT
+  R$ = MNU_CTRL$[SEL]
+  GOSUB @PUSH_RS
+  GOSUB @POP_RR
+  A$ = RR$[1]
+  GOTO @_MNU_CTRL_L_E
+
+@_MNU_CTRL_L_SL
+  IF PREV_CHR$ != "" THEN PNLSTR PREV_CX, PREV_CY, PREV_CHR$, PREV_COL
+  R$ = MNU_CTRL$[SEL]
+  GOSUB @PUSH_RS
+  GOSUB @POP_RR
+  PREV_CX = VAL(RR$[2]) - 1
+  PREV_CY = VAL(RR$[3]) + FLOOR((VAL(RR$[5]) - 1) / 2)
+  IF PREV_CX < 0 THEN PREV_CX = 0
+  IF PREV_CY >= CON_HEIGHT THEN PREV_CY = CON_HEIGHT - 1
+
+  R = 1: GOSUB @PUSH_R
+  R = PREV_CX: GOSUB @PUSH_R
+  R = PREV_CY: GOSUB @PUSH_R
+  GOSUB @CON_CHK_R
+  PREV_CHR$ = RR$[0]
+  PREV_COL = VAL(RR$[1])
+
+  BEEP BEEP_SELECT
+  PNLSTR PREV_CX, PREV_CY, MNU_CURSOR$, MNU_CURSOR_COL
+  GOTO @_MNU_CTRL_L_BLP
+
+@_MNU_CTRL_L_TCH
+  IF TCHST != TRUE THEN R = -1: LSEL = -1: RETURN
+  X = TCHX
+  Y = TCHY
+  I = 0
+@_MNU_CTRL_L_T1
+  IF I >= MNU_CTRL_N THEN R = -2: RETURN
+  R$ = MNU_CTRL$[I]
+  GOSUB @PUSH_RS
+  GOSUB @POP_RR
+  IF RR$[0] != "LONG" OR RR$[1] == "" GOTO @_MNU_CTRL_L_NL
+  IF ! (VAL(RR$[2]) * 8 <= X AND X < (VAL(RR$[2]) + VAL(RR$[4])) * 8) THEN @_MNU_CTRL_L_NL
+  IF ! (VAL(RR$[3]) * 8 <= Y AND Y < (VAL(RR$[3]) + VAL(RR$[5])) * 8) THEN @_MNU_CTRL_L_NL
+  IF LSEL == -1 OR LSEL != I THEN PREV_TCH_TM = TCHTIME: LSEL = I
+  IF ! (VAL(RR$[6]) <= TCHTIME - PREV_TCH_TM) THEN @_MNU_CTRL_L_NL
+  X = X - VAL(RR$[2])
+  Y = Y - VAL(RR$[3])
+  R = I
+  PREV_TCH = -1
+  SEL = I
+  RETURN
+@_MNU_CTRL_L_NL
+  IF RR$[0] != "REGION" OR RR$[1] == "" GOTO @_MNU_CTRL_L_T2
+  IF ! (VAL(RR$[2]) * 8 <= X AND X < (VAL(RR$[2]) + VAL(RR$[4])) * 8) THEN @_MNU_CTRL_L_T2
+  IF ! (VAL(RR$[3]) * 8 <= Y AND Y < (VAL(RR$[3]) + VAL(RR$[5])) * 8) THEN @_MNU_CTRL_L_T2
+  R = I
+  X = X - VAL(RR$[2])
+  Y = Y - VAL(RR$[3])
+  RETURN
+@_MNU_CTRL_L_T2
+  I = I + 1
+  GOTO @_MNU_CTRL_L_T1
+
+@_MNU_CTRL_L_EN
+  BEEP BEEP_CANCEL
+  I = 0
+  GOTO @_MNU_CTRL_L_E1
+@_MNU_CTRL_L_E
+  BEEP BEEP_CLICK
+  I = 1
+  S$ = A$
+@_MNU_CTRL_L_E1
+  IF PREV_CHR$ != "" THEN PNLSTR PREV_CX, PREV_CY, PREV_CHR$, PREV_COL
+  A$ = S$
+  A = I
+
+  GOSUB @POP_R: LSEL = R
+  GOSUB @POP_RS: S$ = R$
+  GOSUB @POP_RS: PREV_CHR$ = R$
+  GOSUB @POP_R: PREV_COL = R
+  GOSUB @POP_R: PREV_CY = R
+  GOSUB @POP_R: PREV_CX = R
+  GOSUB @POP_R: BTN_WAIT = R
+  GOSUB @POP_R: PREV_TCH = R
+  GOSUB @POP_R: SEL = R
+  GOSUB @POP_R: Y = R
+  GOSUB @POP_R: X = R
+  GOSUB @POP_R: I = R
+
+  ARGNUM = 0: GOSUB @LEAVE
+  IF A == 0 THEN RT$ = "NONE" ELSE RT$ = "STRING": R$ = A$
+  RETURN
+
+
+'Automatically set window size, if CW <= 0, CH <= 0.
+'If a key of RA is"\B[Y]", it means the button Y.
+@POPUP_MNU_RA '(CW:NUMBER, CH:NUMBER)with(RA): STRING
+  R$ = "@POPUP_MNU_RA": ARGNUM = 2: GOSUB @ENTER
+
+  R = I: GOSUB @PUSH_R
+  R = CX: GOSUB @PUSH_R
+  R = CY: GOSUB @PUSH_R
+  R = CW: GOSUB @PUSH_R
+  R = CH: GOSUB @PUSH_R
+  R = DX: GOSUB @PUSH_R
+  R = DY: GOSUB @PUSH_R
+  R = SKIP: GOSUB @PUSH_R
+  R$ = S$: GOSUB @PUSH_RS
+  R = NB: GOSUB @PUSH_R
+  R = N: GOSUB @PUSH_R
+  R = RBP: GOSUB @PUSH_R
+  N = RN
+  RBP = SP + 1
+  FOR I = 0 TO N - 1
+    R$ = RA$[I, 0]
+    GOSUB @PUSH_RS
+    R$ = RA$[I, 1]
+    GOSUB @PUSH_RS
+  NEXT
+
+  CW = VAL(STACK$[BP + 1])
+  CH = VAL(STACK$[BP + 2])
+
+  DX = 0
+  DY = 0
+  NB = 0
+  FOR I = 0 TO N - 1
+    A$ = STACK$[RBP + 2 * I]
+    IF LEN(A$) > 3 THEN A$ = MID$(A$, 0, 3)
+    IF A$ == "\B[" THEN NB = NB + 1: GOTO @_PPUP_MNU_NB1
+    IF CW <= 0 THEN R = CLIP_CW[1] - 1 ELSE R = CW
+    GOSUB @PUSH_R
+    R$ = STACK$[RBP + 2 * I]
+    IF LEN(R$) >= 2 AND MID$(R$, 0, 2) == "\S" THEN R$ = MID$(R$, 2, LEN(R$) - 2)
+    GOSUB @PUSH_RS
+    R$ = "": GOSUB @PUSH_RS
+    GOSUB @PRINT_SIZE_R
+    DY = DY + VAL(RR$[1]) - 1
+    A = VAL(RR$[0])
+    IF A >= CLIP_CW[1] - 1 THEN DX = CLIP_CW[1] - 1: A = DX
+    IF DX < A THEN DX = A
+@_PPUP_MNU_NB1
+  NEXT
+
+  IF CW <= 0 THEN CW = DX
+  CX = FLOOR(CLIP_CW[1] / 2 - CW / 2)
+  IF CW == CLIP_CW[1] - 1 OR CX < 1 THEN CX = 1
+  CX = CLIP_CX[1] + CX
+
+  IF CH <= 0 AND 2 * (N - NB) + DY + 1 <= CLIP_CH[1] THEN CH = 2 * (N - NB) + DY + 1
+  IF CH > 0 AND 2 * (N - NB) + DY + 1 <= CH THEN SKIP = 1 ELSE SKIP = 0
+  IF CH <= 0 THEN CH =  N - NB + DY
+  CY = FLOOR(CLIP_CH[1] / 2 - CH / 2)
+  IF CY < 0 THEN CY = 0
+  CY = CLIP_CY[1] + CY
+
+  R = 1: GOSUB @PUSH_R
+  R = CX - 1: GOSUB @PUSH_R
+  R = CY: GOSUB @PUSH_R
+  R = CW + 1: GOSUB @PUSH_R
+  R = CH: GOSUB @PUSH_R
+  GOSUB @PUSH_CWIN
+
+  R = 1: GOSUB @PUSH_R
+  R = 0: GOSUB @PUSH_R
+  R = CX - 1: GOSUB @PUSH_R
+  R = CY: GOSUB @PUSH_R
+  R = CW + 1: GOSUB @PUSH_R
+  R = CH: GOSUB @PUSH_R
+  GOSUB @DRAW_CWIN
+
+  CLIP_CX[1] = CX - 1
+  CLIP_CY[1] = CY
+  CLIP_CW[1] = CW + 1
+  CLIP_CH[1] = CH
+  R = 1: GOSUB @PUSH_R
+  GOSUB @CON_CLS
+  CLIP_CX[1] = CX
+  CLIP_CW[1] = CW
+  CON_COL[1] = MNU_CON_COL
+  CY = CY + SKIP
+
+  GOSUB @PUSH_MNU_CTRL
+  GOSUB @MNU_CTRL_NEW
+  FOR I = 0 TO N - 1
+    IF MID$(STACK$[RBP + I * 2], 0, 3) == "\B[" THEN @_PPUP_MNU_BTN
+    A$ = STACK$[RBP + I * 2]
+    IF LEN(A$)>=2 AND MID$(A$,0,2)=="\S" THEN MNU_CTRL_SEL=I: A$=MID$(A$,2,LEN(A$)-2)
+    R = 1: GOSUB @PUSH_R
+    R = CX: GOSUB @PUSH_R
+    R = CY: GOSUB @PUSH_R
+    R$ = A$: GOSUB @PUSH_RS
+    R$ = "": GOSUB @PUSH_RS
+    GOSUB @CON_PRINT
+    DX = LAST_CX[1] - CX
+    IF LAST_CY[1] - CY > 1 THEN DX = CW
+    DY = LAST_CY[1]
+    IF LAST_CX[1] == CLIP_CX[1] THEN DY = DY - 1
+    R = CX: GOSUB @PUSH_R
+    R = CY: GOSUB @PUSH_R
+'    R = DX: GOSUB @PUSH_R
+    R = CW: GOSUB @PUSH_R
+    R = DY - CY + 1: GOSUB @PUSH_R
+    R$ = STACK$[RBP + I * 2 + 1]: GOSUB @PUSH_RS
+    GOSUB @MNU_CTRL_ADD
+    CY = DY + 1 + SKIP
+    GOTO @_PPUP_MNU_RN
+@_PPUP_MNU_BTN
+    R$ = STACK$[RBP + I * 2]
+    R$ = MID$(R$, 3, LEN(R$) - 3)
+    DX = INSTR(0, R$, "]")
+    IF DX != -1 THEN R$ = MID$(R$, 0, DX)
+    R$ = R$: GOSUB @PUSH_RS
+    R$ = STACK$[RBP + I * 2 + 1]: GOSUB @PUSH_RS
+    GOSUB @MNU_CTRL_BUTTON
+@_PPUP_MNU_RN
+  NEXT
+
+  BEEP BEEP_POPUP
+  GOSUB @MNU_CTRL_LOOP
+
+  IF RT$ == "NONE" THEN CX = 0 ELSE CX = 1: S$ = R$
+
+  GOSUB @POP_MNU_CTRL
+  GOSUB @POP_CWIN
+
+  A = CX
+  A$ = S$
+
+  IF SP != RBP + 2 * N - 1 THEN PRINT "Stack error!": STOP: RETURN
+  SP = RBP - 1
+  GOSUB @POP_R: RBP = R
+  GOSUB @POP_R: N = R
+  GOSUB @POP_R: NB = R
+  GOSUB @POP_RS: S$ = R$
+  GOSUB @POP_R: SKIP = R
+  GOSUB @POP_R: DY = R
+  GOSUB @POP_R: DX = R
+  GOSUB @POP_R: CH = R
+  GOSUB @POP_R: CW = R
+  GOSUB @POP_R: CY = R
+  GOSUB @POP_R: CX = R
+  GOSUB @POP_R: I = R
+
+  ARGNUM = 2: GOSUB @LEAVE
+  IF A == 0 THEN RT$ = "NONE" ELSE RT$ = "STRING": R$ = A$
+  RETURN
+
+'Open popup message window.
+'Automatically set window size, if CW <= 0, CH <= 0.
+@OPEN_MSG_WIN '(CW:NUMBER, CH:NUMBER, MSG$:STRING): NONE
+  R$ = "@OPEN_MSG_WIN": ARGNUM = 3: GOSUB @ENTER
+
+  R = CW: GOSUB @PUSH_R
+  R = CH: GOSUB @PUSH_R
+  R$ = MSG$: GOSUB @PUSH_RS
+  R = CX: GOSUB @PUSH_R
+  R = CY: GOSUB @PUSH_R
+
+  CW = VAL(STACK$[BP + 1])
+  CH = VAL(STACK$[BP + 2])
+  MSG$ = STACK$[BP + 3]
+
+  IF CW <= 0 THEN R = CLIP_CW[0] - 2 ELSE R = CW
+  GOSUB @PUSH_R
+  R$ = MSG$: GOSUB @PUSH_RS
+  R$ = "": GOSUB @PUSH_RS
+  GOSUB @PRINT_SIZE_R
+  IF CW <= 0 THEN CW = VAL(RR$[0]) + 2
+  IF CH <= 0 THEN CH = VAL(RR$[1]) + 2
+
+  IF CW > CLIP_CW[0] THEN CW = CLIP_CW[0]
+  IF CH > CLIP_CH[0] THEN CH = CLIP_CH[0]
+
+  CX = CLIP_CX[0] + FLOOR(CLIP_CW[0] / 2 - CW / 2)
+  IF CX < 0 THEN CX = 0
+
+  CY = CLIP_CY[0] + FLOOR(CLIP_CH[0] / 2 - CH / 2)
+  IF CY < 0 THEN CY = 0
+
+  R = 0: GOSUB @PUSH_R
+  R = CX: GOSUB @PUSH_R
+  R = CY: GOSUB @PUSH_R
+  R = CW: GOSUB @PUSH_R
+  R = CH: GOSUB @PUSH_R
+  GOSUB @PUSH_CWIN
+
+  R = 0: GOSUB @PUSH_R
+  R = 0: GOSUB @PUSH_R
+  R = CX: GOSUB @PUSH_R
+  R = CY: GOSUB @PUSH_R
+  R = CW: GOSUB @PUSH_R
+  R = CH: GOSUB @PUSH_R
+  GOSUB @DRAW_CWIN
+
+  CLIP_CX[0] = CX + 1
+  CLIP_CY[0] = CY + 1
+  CLIP_CW[0] = CW - 2
+  CLIP_CH[0] = CH - 1
+  R = 0: GOSUB @PUSH_R
+  GOSUB @CON_CLS
+  CON_COL[0] = MNU_CON_COL
+
+  R = 0: GOSUB @PUSH_R
+  R = CX + 1: GOSUB @PUSH_R
+  R = CY + 1: GOSUB @PUSH_R
+  R$ = MSG$: GOSUB @PUSH_RS
+  R$ = "": GOSUB @PUSH_RS
+  GOSUB @CON_PRINT
+
+  GOSUB @POP_R: CY = R
+  GOSUB @POP_R: CX = R
+  GOSUB @POP_RS: MSG$ = R$
+  GOSUB @POP_R: CH = R
+  GOSUB @POP_R: CW = R
+
+  ARGNUM = 3: GOSUB @LEAVE
+  RETURN
+
+
+@CLOSE_MSG_WIN '(NONE): NONE
+  R$ = "@CLOSE_MSG_WIN": ARGNUM = 0: GOSUB @ENTER
+  GOSUB @POP_CWIN
+  ARGNUM = 0: GOSUB @LEAVE
+  RETURN
+
+
+@TCH_CTRL_NEW '(NONE): NONE
+  R$ = "@TCH_CTRL_NEW": ARGNUM = 0: GOSUB @ENTER
+  TCH_CTRL_N = 0
+  PREV_TCH_TM = TCHTIME
+  TCH_CTRL_LSEL = -1
+  TCH_CTRL_SEL = -1
+  ARGNUM = 0: GOSUB @LEAVE
+  RETURN
+
+
+'If VALUE$ == "", the region is ignored.
+@TCH_CTRL_ADD '(X:NUMBER, Y:NUMBER, W:NUMBER, H:NUMBER, VALUE$:STRING): NONE
+  R$ = "@TCH_CTRL_ADD": ARGNUM = 5: GOSUB @ENTER
+
+  R = X: GOSUB @PUSH_R
+  R = Y: GOSUB @PUSH_R
+  R = W: GOSUB @PUSH_R
+  R = H: GOSUB @PUSH_R
+  R$ = VALUE$: GOSUB @PUSH_RS
+
+  X = VAL(STACK$[BP + 1])
+  Y = VAL(STACK$[BP + 2])
+  W = VAL(STACK$[BP + 3])
+  H = VAL(STACK$[BP + 4])
+  VALUE$ = STACK$[BP + 5]
+
+  RR$[0] = "REGION"
+  RR$[1] = VALUE$
+  RR$[2] = STR$(X)
+  RR$[3] = STR$(Y)
+  RR$[4] = STR$(W)
+  RR$[5] = STR$(H)
+  RN = 6
+  GOSUB @PUSH_RR
+  GOSUB @POP_RS
+  TCH_CTRL$[TCH_CTRL_N] = R$
+  TCH_CTRL_N = TCH_CTRL_N + 1
+
+  GOSUB @POP_RS: VALUE$ = R$
+  GOSUB @POP_R: H = R
+  GOSUB @POP_R: W = R
+  GOSUB @POP_R: Y = R
+  GOSUB @POP_R: X = R
+
+  ARGNUM = 5: GOSUB @LEAVE
+  RETURN
+
+
+'If VALUE$ == "", the region is ignored.
+@TCH_CTRL_LONG '(X:NUMBER, Y:NUMBER, W:NUMBER, H:NUMBER, TIME:NUMBER, VALUE$:STRING): NONE
+  R$ = "@TCH_CTRL_LONG": ARGNUM = 6: GOSUB @ENTER
+
+  R = X: GOSUB @PUSH_R
+  R = Y: GOSUB @PUSH_R
+  R = W: GOSUB @PUSH_R
+  R = H: GOSUB @PUSH_R
+  R = TIME: GOSUB @PUSH_R
+  R$ = VALUE$: GOSUB @PUSH_RS
+
+  X = VAL(STACK$[BP + 1])
+  Y = VAL(STACK$[BP + 2])
+  W = VAL(STACK$[BP + 3])
+  H = VAL(STACK$[BP + 4])
+  TIME = VAL(STACK$[BP + 5])
+  VALUE$ = STACK$[BP + 6]
+
+  RR$[0] = "LONG"
+  RR$[1] = VALUE$
+  RR$[2] = STR$(X)
+  RR$[3] = STR$(Y)
+  RR$[4] = STR$(W)
+  RR$[5] = STR$(H)
+  RR$[6] = STR$(TIME)
+  RN = 7
+  GOSUB @PUSH_RR
+  GOSUB @POP_RS
+  TCH_CTRL$[TCH_CTRL_N] = R$
+  TCH_CTRL_N = TCH_CTRL_N + 1
+
+  GOSUB @POP_RS: VALUE$ = R$
+  GOSUB @POP_R: TIME = R
+  GOSUB @POP_R: H = R
+  GOSUB @POP_R: W = R
+  GOSUB @POP_R: Y = R
+  GOSUB @POP_R: X = R
+
+  ARGNUM = 6: GOSUB @LEAVE
+  RETURN
+
+
+'If VALUE$ == "", the BTN$ is ignored.
+@TCH_CTRL_BUTTON '(BTN$:STRING, VALUE$:STRING): NONE
+  R$ = "@TCH_CTRL_BUTTON": ARGNUM = 2: GOSUB @ENTER
+
+  R$ = BTN$: GOSUB @PUSH_RS
+  R$ = VALUE$: GOSUB @PUSH_RS
+
+  BTN$ = STACK$[BP + 1]
+  VALUE$ = STACK$[BP + 2]
+
+  RR$[0] = "BUTTON"
+  RR$[1] = VALUE$
+  RR$[2] = BTN$
+  RN = 3
+  GOSUB @PUSH_RR
+  GOSUB @POP_RS
+  TCH_CTRL$[TCH_CTRL_N] = R$
+  TCH_CTRL_N = TCH_CTRL_N + 1
+
+  GOSUB @POP_RS: VALUE$ = R$
+  GOSUB @POP_RS: BTN$ = R$
+
+  ARGNUM = 2: GOSUB @LEAVE
+  RETURN
+
+
+'Returns RR$[0] <- VALUE,
+'RR$[1] <- TCHX - top right X, RR$[2] <- TCHY - top right Y of region.
+'RT$ == "NONE" if no touch and no button.
+@TCH_CTRL_CHECK_R '(NONE): ARRAY
+  R$ = "@TCH_CTRL_CHECK_R": ARGNUM = 0: GOSUB @ENTER
+
+  R = I: GOSUB @PUSH_R
+  R = X: GOSUB @PUSH_R
+  R = Y: GOSUB @PUSH_R
+
+  A = BUTTON(0)
+  IF ((PREV_BUTTON XOR A) AND A) != 0 THEN @_TCH_CTRL_C_CB
+  PREV_BUTTON = A
+  IF PREV_BTN_TM_L == -1 THEN I = BUTTON_INTERVAL: GOTO @_TCH_CTRL_C_1
+  IF MAINCNTH - PREV_BTN_TM_H > 1 THEN I = BUTTON_INTERVAL: GOTO @_TCH_CTRL_C_1
+  I = MAINCNTH - PREV_BTN_TM_H
+  IF I == 1 THEN I = (145 * 60 * 60 - PREV_BTN_TM_L) + MAINCNTL: GOTO @_TCH_CTRL_C_1
+  I = MAINCNTL - PREV_BTN_TM_L
+@_TCH_CTRL_C_1
+  IF A != 0 AND I >= BUTTON_INTERVAL THEN @_TCH_CTRL_C_CB
+  GOSUB @_TCH_CTRL_C_TCH
+  A = R
+  IF A >= 0 AND TCH_CTRL_SEL == -1 THEN @_TCH_CTRL_C_CT
+  TCH_CTRL_SEL = A
+  GOTO @_TCH_CTRL_C_EN
+
+@_TCH_CTRL_C_CB
+  R = A
+  IF PREV_BUTTON != A THEN A = (PREV_BUTTON XOR A) AND A
+  PREV_BUTTON = R
+  X = -1
+  Y = -1
+
+  PREV_BTN_TM_L = MAINCNTL
+  PREV_BTN_TM_H = MAINCNTH
+
+  A$ = ""
+  IF (A AND BUTTON_START) != 0 THEN A$ = "START"
+  IF (A AND BUTTON_UP) != 0 THEN A$ = "UP"
+  IF (A AND BUTTON_DOWN) != 0 THEN A$ = "DOWN"
+  IF (A AND BUTTON_LEFT) != 0 THEN A$ = "LEFT"
+  IF (A AND BUTTON_RIGHT) != 0 THEN A$ = "RIGHT"
+  IF (A AND BUTTON_A) != 0 THEN A$ = "A"
+  IF (A AND BUTTON_B) != 0 THEN A$ = "B"
+  IF (A AND BUTTON_X) != 0 THEN A$ = "X"
+  IF (A AND BUTTON_Y) != 0 THEN A$ = "Y"
+  IF (A AND BUTTON_L) != 0 THEN A$ = "L"
+  IF (A AND BUTTON_R) != 0 THEN A$ = "R"
+  IF A$ == "" THEN @_TCH_CTRL_C_EN
+  I = 0
+@_TCH_CTRL_C_CB1
+  IF I >= TCH_CTRL_N THEN @_TCH_CTRL_C_EN
+  R$ = TCH_CTRL$[I]
+  GOSUB @PUSH_RS
+  GOSUB @POP_RR
+  IF RR$[0] == "BUTTON" AND RR$[2] == A$ AND RR$[1] == ""  THEN @_TCH_CTRL_C_EN
+  IF RR$[0] == "BUTTON" AND RR$[2] == A$ THEN A$ = RR$[1]:TCH_CTRL_SEL=I: GOTO @_TCH_CTRL_C_E
+  I = I + 1
+  GOTO @_TCH_CTRL_C_CB1
+
+@_TCH_CTRL_C_TCH
+  IF TCHST != TRUE THEN R = -1:  TCH_CTRL_LSEL = -1: RETURN
+  X = TCHX
+  Y = TCHY
+  I = 0
+@_TCH_CTRL_C_T1
+  IF I >= TCH_CTRL_N THEN R = -2: RETURN
+  R$ = TCH_CTRL$[I]
+  GOSUB @PUSH_RS
+  GOSUB @POP_RR
+  IF RR$[0] != "LONG" OR RR$[1] == "" GOTO @_TCH_CTRL_C_NL
+  IF ! (VAL(RR$[2]) * 1 <= X AND X < (VAL(RR$[2]) + VAL(RR$[4])) * 1) THEN @_TCH_CTRL_C_NL
+  IF ! (VAL(RR$[3]) * 1 <= Y AND Y < (VAL(RR$[3]) + VAL(RR$[5])) * 1) THEN @_TCH_CTRL_C_NL
+  IF TCH_CTRL_LSEL == -1 OR TCH_CTRL_LSEL != I THEN PREV_TCH_TM = TCHTIME: TCH_CTRL_LSEL = I
+  IF ! (VAL(RR$[6]) <= TCHTIME - PREV_TCH_TM) THEN @_TCH_CTRL_C_NL
+  X = X - VAL(RR$[2])
+  Y = Y - VAL(RR$[3])
+  R = I
+  TCH_CTRL_SEL = -1
+  RETURN
+@_TCH_CTRL_C_NL
+  IF RR$[0] != "REGION" OR RR$[1] == "" GOTO @_TCH_CTRL_C_T2
+  IF ! (VAL(RR$[2]) * 1 <= X AND X < (VAL(RR$[2]) + VAL(RR$[4])) * 1) THEN @_TCH_CTRL_C_T2
+  IF ! (VAL(RR$[3]) * 1 <= Y AND Y < (VAL(RR$[3]) + VAL(RR$[5])) * 1) THEN @_TCH_CTRL_C_T2
+  R = I
+  X = X - VAL(RR$[2])
+  Y = Y - VAL(RR$[3])
+  RETURN
+@_TCH_CTRL_C_T2
+  I = I + 1
+  GOTO @_TCH_CTRL_C_T1
+
+@_TCH_CTRL_C_EN
+  A = 0
+  GOTO @_TCH_CTRL_C_E1
+@_TCH_CTRL_C_CT
+  TCH_CTRL_SEL = A
+  R$ = TCH_CTRL$[A]
+  GOSUB @PUSH_RS
+  GOSUB @POP_RR
+  A$ = RR$[1]
+@_TCH_CTRL_C_E
+  TCH_CTRL_LSEL = -1
+  RR$[0] = A$
+  RR$[1] = STR$(X)
+  RR$[2] = STR$(Y)
+  RN = 3
+  A = 1
+
+@_TCH_CTRL_C_E1
+  GOSUB @POP_R: Y = R
+  GOSUB @POP_R: X = R
+  GOSUB @POP_R: I = R
+
+  ARGNUM = 0: GOSUB @LEAVE
+  IF A == 0 THEN RT$ = "NONE" ELSE RT$ = "ARRAY"
+  RETURN
+
+
+'Returns RR$[0] <- VALUE,
+'RR$[1] <- TCHX - top right X, RR$[2] <- TCHY - top right Y of region.
+@TCH_CTRL_LOOP_R '(NONE): ARRAY
+  R$ = "@TCH_CTRL_LOOP_R": ARGNUM = 0: GOSUB @ENTER
+
+@_TCH_CTRL_LP_LP
+  GOSUB @TCH_CTRL_CHECK_R
+  IF RT$ != "NONE" THEN @_TCH_CTRL_LP_E
+  VSYNC 1
+  GOTO @_TCH_CTRL_LP_LP
+
+@_TCH_CTRL_LP_E
+  ARGNUM = 0: GOSUB @LEAVE
+  RT$ = "ARRAY"
+  RETURN
+
+
+'== END CTRLLIB ==

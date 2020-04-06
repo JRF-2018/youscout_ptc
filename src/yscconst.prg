@@ -1,0 +1,300 @@
+'== BEGIN YSCCONST ==
+@YSCCONST_INIT
+YSCCONST_VER$ = "0.04" 'Time-stamp: <2013-02-26T23:24:31Z>
+YSCCONST_URI$ = "http://jrf.cocolog-nifty.com/archive/youscout/ptc/yscconst.prg"
+
+'REQUIRE "STDLIB"
+
+SAVE_FILE$ = "MEM:YOUSCOUT"
+YSCHELP_PRG$ = "YSCHELP"
+DEF_LANG$ = "JA" '"EN": English, "JA": Japanese.
+DEF_TERMINALS = 3
+DEF_COURT_CD$ = "K14"
+  ' K14 == { K: 14, Q: 13, C: 12, J: 11 },
+  ' K13a == { K: 13, Q: 12, C: 12, J: 11 },
+  ' K13b == { K: 13, Q: 12, C: 11, J: 11 },
+  ' K10 == { K: 10, Q: 10, C: 10, J: 10 },
+DEF_MA_INF = 2.0
+DEF_SWAP_8_11$ = "memorial"
+DEF_UREV = 0 '1:Upper display is Reversal.
+
+A$= "youscout,1" + ",lang," + DEF_LANG$ + ",terminals,"+STR$(DEF_TERMINALS)
+A$=A$ + ",court_cd," + DEF_COURT_CD$ + ",ma_inf," + STR$(DEF_MA_INF)
+A$=A$ + ",swap_8_11," + DEF_SWAP_8_11$ + ",urev," + STR$(DEF_UREV)
+DEF_SA$ = A$
+
+DIM TABLE_MAJOR$[22]
+RESTORE @TABLE_MAJOR
+FOR A = 0 TO 22 -1
+  READ TABLE_MAJOR$[A]
+NEXT
+
+@TABLE_MAJOR
+'(0) The Fool (Not Use)
+DATA "0,5,5,5,5,5,3,5"
+'(1) The Magician
+DATA "3,3,5,7,0,3,7,5"
+'(2) The High Priestess
+DATA "0,5,7,3,7,5,3,3"
+'(3) The Empress
+DATA "3,3,0,3,7,5,5,7"
+'(4) The Emperor
+DATA "3,3,0,3,5,7,7,5"
+'(5) The Hierophant
+DATA "5,0,7,3,3,3,7,5"
+'(6) The Lovers
+DATA "3,3,5,3,5,7,7,0"
+'(7) The Chariot
+DATA "7,7,3,3,0,3,5,5"
+'(8) Strength
+DATA "5,5,0,3,7,7,3,3"
+'(9) The Hermit
+DATA "0,7,7,3,3,3,5,5"
+'(10) Wheel of Fortune
+DATA "5,5,5,5,5,5,3,0"
+'(11) Justice
+DATA "5,5,5,5,0,3,5,5"
+'(12) The Hanged Man
+DATA "3,5,3,7,3,5,0,7"
+'(13) Death (Not Use)
+DATA "5,0,5,5,5,3,5,5"
+'(14) Temperance
+DATA "5,5,7,3,3,7,0,3"
+'(15) The Devil
+DATA "5,3,3,7,5,0,3,7"
+'(16) The Tower
+DATA "5,7,5,3,7,0,3,3"
+'(17) The Star
+DATA "5,3,5,7,3,3,7,0"
+'(18) The Moon
+DATA "3,7,0,7,5,5,3,3"
+'(19) The Sun
+DATA "7,3,0,7,3,3,5,5"
+'(20) Judgement
+DATA "5,0,7,3,3,5,3,7"
+'(21) The World
+DATA "0,5,3,7,7,3,3,5"
+
+'Sounds
+SND_SRBN_CLR$ = "T120@128O2V120F+32F+8R8V80" + "F+64"*6
+SND_SRBN$ = "T120@128V100O2F+16"
+SND_CD$ = "T120@128V80O4A64"
+SND_CD_SHUFFLE$ = "T120@128V80O4L16" + "AR" * 4
+SND_SRBN_CLR_T = 45
+SND_CD_SH_T = 60
+BGM_BEEP = 128
+
+BEEP_SELECT = 48: BEEP_CANCEL = 51: BEEP_CLICK = 62
+
+'about SPRITE.
+SP_DRAWN = 1
+SPPL_DRAWN = 8
+SP_TOKEN = 16
+SP_RDLN_OFFSET = 20: A = SP_RDLN_OFFSET
+SP_RDLN_TL = 0 + A: SP_RDLN_T = 1 + A: SP_RDLN_TR = 2 + A
+SP_RDLN_R = 3 + A: SP_RDLN_BR = 4 + A: SP_RDLN_B = 5 + A
+SP_RDLN_BL = 6 + A: SP_RDLN_L = 7 + A
+SP_A00 = 30
+SP_A13 = 31
+SP_B00 = 0
+SP_TMP_OFFSET = 2 'SP_TMP_N = 14
+SPS_CURSOR = 112
+SP_CURSOR = 0
+SP_CURSOR_HOME_X = -1
+SP_CURSOR_HOME_Y = -1
+
+SPR_NOTCLR = 0: SPR_CHR = 1: SPR_PL = 2: SPR_DEPTH = 3
+SPR_W = 4: SPR_H = 5: SPR_HOME_X = 6: SPR_HOME_Y = 7
+'X, Y, ANGLE, SCALE can be read by SPREAD
+SPR_N = SPR_HOME_Y + 1
+SPR_X = 8: SPR_Y = 9: SPR_ANGLE = 10: SPR_SCALE = 11
+SPR_INIT_N = SPR_SCALE + 1
+
+'Points for cards.
+DIM CARDS_X[8], CARDS_Y[8], CARDS_ANCHOR$[8]
+CARDS_BASE_X = 4 * 8
+CARDS_BASE_Y = 0
+CARDS_X[7] = 72 + CARDS_BASE_X
+CARDS_Y[7] = 0 + CARDS_BASE_Y
+CARDS_ANCHOR$[7] = "N"
+CARDS_X[6] = 72 + CARDS_BASE_X
+CARDS_Y[6] = 120 + CARDS_BASE_Y
+CARDS_ANCHOR$[6] = "S"
+CARDS_X[5] = 0 + CARDS_BASE_X
+CARDS_Y[5] = 8 + CARDS_BASE_Y
+CARDS_ANCHOR$[5] = "NE"
+CARDS_X[4] = 32 + CARDS_BASE_X
+CARDS_Y[4] = 64 + CARDS_BASE_Y
+CARDS_ANCHOR$[4] = "NE"
+CARDS_X[3] = 144 + CARDS_BASE_X
+CARDS_Y[3] = 8 + CARDS_BASE_Y
+CARDS_ANCHOR$[3] = "NW"
+CARDS_X[2] = 16 + CARDS_BASE_X
+CARDS_Y[2] = 104 + CARDS_BASE_Y
+CARDS_ANCHOR$[2] = "NW"
+CARDS_X[1] = 112 + CARDS_BASE_X
+CARDS_Y[1] = 56 + CARDS_BASE_Y
+CARDS_ANCHOR$[1] = "SW"
+CARDS_X[0] = 128 + CARDS_BASE_X
+CARDS_Y[0] = 104 + CARDS_BASE_Y
+CARDS_ANCHOR$[0] = "NE"
+CARDS_W = 68
+CARDS_H = 72
+CARD_HW = FLOOR(CARD_WIDTH / 2)
+CARD_HH = FLOOR(CARD_HEIGHT / 2)
+
+DIM CARD_X[6], CARD_Y[6]
+CARDS_CENTER_X = 106 + CARDS_BASE_X
+CARDS_CENTER_Y = 96 + CARDS_BASE_Y
+CARD_X[0] = 128 + 68 + 4 - 18 + CARDS_BASE_X
+CARD_Y[0] = 120 + CARDS_BASE_Y
+CARD_X[1] = 106 - 18 + CARDS_BASE_X
+CARD_Y[1] = 104 + CARDS_BASE_Y
+CARD_X[2] = 16 - 4 - 18 + CARDS_BASE_X
+CARD_Y[2] = 120 + CARDS_BASE_Y
+CARD_X[3] = 144  - 4 - 18 + 8 + CARDS_BASE_X
+CARD_Y[3] = 16 + CARDS_BASE_Y
+CARD_X[4] = 106 - 18 + CARDS_BASE_X
+CARD_Y[4] = 88 - 56 + CARDS_BASE_Y
+CARD_X[5] = 0 + 68 + 4 - 18 - 8 + CARDS_BASE_X
+CARD_Y[5] = 16 + CARDS_BASE_Y
+
+DIM BOARD_ORDER[8]
+BOARD_ORDER[0] = 7: BOARD_ORDER[1] = 5: BOARD_ORDER[2] = 3
+BOARD_ORDER[3] = 2: BOARD_ORDER[4] = 4: BOARD_ORDER[5] = 1
+BOARD_ORDER[6] = 6: BOARD_ORDER[7] = 0
+
+DIM RULE_COMP$[2,4], RULE_MOVE$[2,4], RULE_STAY$[2,4]
+DIM RULE_MOVE_C$[2,4], RULE_STAY_C$[2,4]
+'0: Lower Trigram, 1: Upper Trigram
+'0: Sword, 1: Coin, 2: Cup, 3: Wand
+RULE_COMP$[1, 0] = "Max(@♦)+(→A)[/♠]>$♠+(→A)[♦/]"
+RULE_MOVE$[1, 0] = "→,$♠⇒(↑♠)"
+RULE_STAY$[1, 0] = "$♠⇒×,Max(@♦)⇒(←♦)"
+
+RULE_COMP$[1, 1] = "STAY"
+RULE_MOVE$[1, 1] = ""
+RULE_STAY$[1, 1] = "$♦⇒(@♦)"
+
+RULE_COMP$[1, 2] = "$♥+(@A)[♥/]>(←A)[♣/]"
+RULE_MOVE$[1, 2] = "←,$♥⇒(↓♥)"
+RULE_STAY$[1, 2] = "$♥⇒(↓♥)"
+
+RULE_COMP$[1, 3] = "$♣+(@A)[♣/]+Max(↓♥!)+(↓A)[/♥]>Sum(@♦)+(@A)[/♦]"
+RULE_MOVE$[1, 3] = "↓,$♣⇒×,Max(↓♥)⇒×"
+RULE_STAY$[1, 3] = "$♣⇒×,Max(@♦)⇒(↓♦)"
+
+RULE_COMP$[0, 0] = "$♠+(@A)[♠/]+Sum(↓♦)>(↑A)[/♠]+Sum(↑♦)+Sum(↑♠)"
+RULE_MOVE$[0, 0] = "CHOOSE"
+RULE_STAY$[0, 0] = "Max(@♥)⇒×,$♠⇒×"
+RULE_MOVE_C$[0, 0] = "↑,(↓♦)⇒×,(↑♠)⇒×,$♠⇒(↑♠)"
+RULE_STAY_C$[0, 0] = "(@♥)⇒×,$♠⇒×"
+
+RULE_COMP$[0, 1] = "$♦+(@A)[♦/]>(←A)[/♦]"
+RULE_MOVE$[0, 1] = "←,$♦⇒(↑♦)"
+RULE_STAY$[0, 1] = "$♦⇒(↓♦)"
+
+RULE_COMP$[0, 2] = "STAY"
+RULE_MOVE$[0, 2] = ""
+RULE_STAY$[0, 2] = "$♥⇒(@♥)"
+
+RULE_COMP$[0, 3] = "$♣+(@A)[/♣]>Suitable(@♥!)+(→A)[/♥]"
+RULE_MOVE$[0, 3] = "→,$♣⇒×,Min(Suitable(@♥))⇒×"
+RULE_STAY$[0, 3] = "$♣⇒×"
+
+CARDS_TYPE_L$ = "♥": CARDS_TYPE_U$ = "♦"
+
+
+CON_COL[0] = COL_BLACK
+CON_COL[1] = COL_BLACK
+CON_DECORATE = TRUE
+DECORATE_CHARS$ = SUIT_CHARS$ + BUTTON_CHARS$ + CHR$(6)
+DECORATE_COLS$ = "23454325773"
+MNU_CURSOR$ = CHR$(11)
+MNU_CURSOR_COL = COL_DARK_GREY
+MNU_CON_COL = COL_BLACK
+
+'Main Panel
+GAME_CON_CW = CON_WIDTH - 2
+GAME_CON_CH = 5
+GAME_CON_CX = 1
+GAME_CON_CY = CON_HEIGHT - GAME_CON_CH
+TALON_X = GRP_WIDTH - 8 - PM_TALON_W
+TALON_Y = GAME_CON_CY * FONT_HEIGHT - 8 - PM_TALON_H
+TALON_NUM_CX = CON_WIDTH - 5
+TALON_NUM_CY = GAME_CON_CY-1-(FLOOR(PM_TALON_H/8)+!!(PM_TALON_H%8)+ 1)
+DISCARDED_X = TALON_X - 8 - PM_DISCARDED_W - 5
+DISCARDED_Y = TALON_Y
+RULES_CX = 2
+RULES_CY = GAME_CON_CY - 1 - 4
+
+DRAWN_X = GRP_WIDTH - CARD_WIDTH - 4
+DRAWN_Y = FLOOR(GRP_HEIGHT / 2 - CARD_HEIGHT / 2) - 16
+
+'Soroban Console X,Y
+SRBN_CX = 1: SRBN_CY = 2: SRBN_CW = 14: SRBN_CH = 10
+
+'Mini cards
+MINI_CDS_W = 80
+MINI_CDS_H = 64
+'103x160, 1280x1024 are original medium sizes of JRF Tarot.
+MINI_CD_W = FLOOR(MINI_CDS_W * 103 / 1280)
+MINI_CD_H = FLOOR(MINI_CDS_H * 160 / 1024)
+MINI_CDS_X = GRP_WIDTH - MINI_CDS_W - 16
+MINI_CDS_Y = 2
+DIM MINI_CD_X[9], MINI_CD_Y[9]
+'0: cups_1 .. 5: coins_6,
+'6: coins_lower, 7: swords_upper
+'8: purpose card.
+MINI_CD_X[8] = 0
+MINI_CD_Y[8] = FLOOR(MINI_CDS_H / 2 - MINI_CD_H / 2)
+MINI_CD_X[0] = MINI_CDS_W - MINI_CD_W
+MINI_CD_Y[0] = FLOOR(5 * MINI_CDS_H / 6 - MINI_CD_H / 2)
+MINI_CD_X[1] = FLOOR(MINI_CD_W + (MINI_CDS_W - MINI_CD_W) / 2 - MINI_CD_W / 2)
+MINI_CD_Y[1] = FLOOR(MINI_CDS_H / 2 + (MINI_CDS_H - MINI_CD_H) / 6 - MINI_CD_H / 2)
+MINI_CD_X[2] = MINI_CD_W
+MINI_CD_Y[2] = FLOOR(5 * MINI_CDS_H / 6 - MINI_CD_H / 2)
+MINI_CD_X[3] = FLOOR(MINI_CD_W / 2 + 3 * (MINI_CDS_W - MINI_CD_W) / 4)
+MINI_CD_Y[3] = FLOOR(1 * MINI_CDS_H / 6 - MINI_CD_H / 2)
+MINI_CD_X[4] = MINI_CD_X[1]
+MINI_CD_Y[4] = FLOOR(MINI_CDS_H / 2 - (MINI_CDS_H - MINI_CD_H) / 6 - MINI_CD_H / 2)
+MINI_CD_X[5] = FLOOR(MINI_CD_W / 2 + 1 * (MINI_CDS_W - MINI_CD_W) / 4)
+MINI_CD_Y[5] = FLOOR(1 * MINI_CDS_H / 6 - MINI_CD_H / 2)
+MINI_CD_X[6] = MINI_CD_X[1]
+MINI_CD_Y[6] = MINI_CDS_H - MINI_CD_H
+MINI_CD_X[7] = MINI_CD_X[1]
+MINI_CD_Y[7] = 0
+
+GRP_R_BOARD = 0
+GRP_R_I8 = GRP_R_BOARD + 6
+GRP_R_I11 = GRP_R_BOARD + 7
+GRP_R_FST_CD = GRP_R_BOARD + 6
+GRP_R_DRAWN = GRP_R_FST_CD + 8
+
+DISPLAY_MSG_TM = 120: FLASH_MSG_TM = 60
+MOVE_TOKEN_TM = 120
+MISSING_TM_U = 60: MISSING_TM_L = 30
+DRAW_CD_TM_L = 30: DRAW_CD_TM_U = 30: DRAW_CD_TM_A = 30
+MISSING_X = FLOOR(GRP_WIDTH / 2)
+'MISSING_Y = GRP_HEIGHT + 1: MISSING_Y_R =  GRP_HEIGHT + CARDS_H
+ANIM_B00_ANGLE = 150: ANIM_B00_ANGLE_R = 330: ANIM_TOKEN_MAG = 120
+LBG1_CX = FLOOR(DISCARDED_X / 8)
+LBG1_CY = FLOOR(DISCARDED_Y / 8)
+LBG1_CW = FLOOR((TALON_X - DISCARDED_X + PM_TALON_W) / 8) + 1
+LBG1_CH = FLOOR(PM_DISCARDED_W / 8) + !!(PM_DISCARDED_W % 8)
+'N: Normal, M: Missing.
+LBG1_M_OFS_X = 0: LBG1_M_OFS_Y = DISCARDED_Y + PM_DISCARDED_H
+LBG1_N_OFS_X = 0: LBG1_N_OFS_Y = 0
+CARD_CW = FLOOR(CARD_WIDTH / 8) + !!(CARD_WIDTH % 8)
+CARD_CH = FLOOR(CARD_HEIGHT / 8) + !!(CARD_HEIGHT % 8)
+DISCARDED_CW = FLOOR(PM_DISCARDED_W / 8) + !!(PM_DISCARDED_W % 8)
+DISCARDED_CH = FLOOR(PM_DISCARDED_H / 8) + !!(PM_DISCARDED_H % 8)
+TALON_CX = FLOOR(TALON_X  / 8) + 2
+DISCARDED_CX = FLOOR(DISCARDED_X / 8) + 1
+
+
+'PROVIDE "YSCCONST"
+RETURN
+
+
+'== END YSCCONST ==
