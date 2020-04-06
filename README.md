@@ -1,5 +1,7 @@
 # Youscout_PTC 易双六PTC ヨウスコウPTC
 
+<!-- Time-stamp: "2020-04-06T08:29:04Z" -->
+
 This is a Nintendo-DS (DSi or 3DS) version of "Youscout" which can run
 in the Petit Computer of Nintendo DSi-ware.  "Youscout" is is a sort
 of solitaire games playing with Tarot cards, inspired by arguments
@@ -38,4 +40,4 @@ the browser game version has different condition.
 
 
 ---
-(This file is written in Japanese/UTF8.)
+(This document is mainly written in Japanese/UTF8.)
