@@ -1,6 +1,6 @@
 # Youscout_PTC 易双六PTC ヨウスコウPTC
 
-<!-- Time-stamp: "2020-04-06T08:29:04Z" -->
+<!-- Time-stamp: "2020-04-06T08:36:16Z" -->
 
 This is a Nintendo-DS (DSi or 3DS) version of "Youscout" which can run
 in the Petit Computer of Nintendo DSi-ware.  "Youscout" is is a sort
@@ -10,7 +10,6 @@ about Yi-Ching divination.
 これはニンテンドーDS (DSi or 3DS)用の『易双六』で、ニンテンドー DSi ウェ
 アの『プチコンmkII』用の BASIC プログラムである。『易双六』はタロット
 カードを使ったソリティアゲームの一種で、易の議論の影響を受けて作られた。
-ティアの一種。易経の理論からヒントを得ている。
 
 Read 00README.txt and index.html.
 
