@@ -1,9 +1,9 @@
 # Youscout_PTC 易双六PTC ヨウスコウPTC
 
-<!-- Time-stamp: "2020-04-06T08:36:16Z" -->
+<!-- Time-stamp: "2020-04-06T09:10:53Z" -->
 
 This is a Nintendo-DS (DSi or 3DS) version of "Youscout" which can run
-in the Petit Computer of Nintendo DSi-ware.  "Youscout" is is a sort
+in the Petit Computer of Nintendo DSi-ware.  "Youscout" is a sort
 of solitaire games playing with Tarot cards, inspired by arguments
 about Yi-Ching divination.
 
