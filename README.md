@@ -1,6 +1,6 @@
 # Youscout_PTC 易双六PTC ヨウスコウPTC
 
-<!-- Time-stamp: "2020-04-06T09:10:53Z" -->
+<!-- Time-stamp: "2020-04-07T04:55:54Z" -->
 
 This is a Nintendo-DS (DSi or 3DS) version of "Youscout" which can run
 in the Petit Computer of Nintendo DSi-ware.  "Youscout" is a sort
@@ -14,6 +14,11 @@ about Yi-Ching divination.
 Read 00README.txt and index.html.
 
 00README.txt と index.html をお読み下さい。
+
+
+## GitHub 登録までの略歴
+
+2013-02-21、初公開。2013-04-13、バージョン 0.06。2020-04-06、GitHub にバージョン 0.06 を初登録。
 
 
 ## License
